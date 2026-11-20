@@ -120,6 +120,10 @@ output. Dependencies must represent a real data or decision handoff. The consume
 edges as a DAG; it does not display Agent-to-Agent communication because that concept belongs to
 Agent Team.
 
+The interaction Agent may propose the initial Task plan. It cannot call `workflow_define`; the bound
+TaskAgent owns that operation. Nodes are rows in `task_workflow_nodes`, scoped by Run, with each row
+recording its dependency list and bound Subagent. No workflow graph is stored in an external file.
+
 ## Task, Run and Agent hierarchy
 
 | Level | Owner | Responsibility |
@@ -246,6 +250,10 @@ the task UI only explains that continuation should happen in conversation.
 The system should not copy the whole main conversation into every worker. Broad context increases
 cost and can leak unrelated personal information. The TaskAgent must provide enough task-specific
 material for each assignment.
+
+Occurrence timestamps remain UTC for durable ordering. When events are injected into model context,
+the event `<time>` is converted to the latest client-supplied `time_zone` and the timezone is included
+as context metadata. This is presentation context, not a second stored clock.
 
 ## User-visible layers
 

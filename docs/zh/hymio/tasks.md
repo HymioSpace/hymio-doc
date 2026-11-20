@@ -138,6 +138,11 @@ Supervisor 检查持久化的触发时间、等待、租约、超时、预算和
 选择节点后可以查看输入、结果、错误和绑定 Agent activity。动态工作流不展示 Agent 间通信，因为
 通信属于 Agent Team，而不是依赖图。
 
+初始任务计划由创建 Task 的交互 Agent 提出；运行中的 DAG 属于绑定的 TaskAgent，只有它调用
+`workflow_define`，交互 Agent 不能替这个 Run 定义节点。第一次定义到达前，任务页显示
+**工作流准备中**，而不是一段空白。DAG 节点持久化在 Oath 的 `task_workflow_nodes` SQL 表中，
+JSON 依赖字段是关系状态的一部分，不是独立 DAG 文件。
+
 所有依赖节点成功以后，Leader 才会被唤醒整合。上游失败会让下游进入 blocked，而不是在没有输入时继续执行。
 
 <DocFigure

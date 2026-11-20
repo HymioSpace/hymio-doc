@@ -157,6 +157,12 @@ Selecting a node reveals its inputs, result, error and bound Agent activity. Dyn
 not show Agent-to-Agent communication because that concept belongs to Agent Team, not to a dependency
 graph.
 
+The initial task plan is proposed by the interaction Agent when it creates the Task. The bound
+TaskAgent owns the runtime DAG and calls `workflow_define`; the interaction Agent cannot define nodes
+inside that Run. Until the first DAG definition arrives, the task page shows **Preparing workflow**
+instead of an empty section. DAG nodes live in Oath's `task_workflow_nodes` SQL table; their JSON
+dependency field is structured relational state, not a separate DAG file.
+
 The leader is not asked to integrate until all required nodes finish. A failed node blocks dependent
 nodes rather than allowing them to run on missing input.
 
