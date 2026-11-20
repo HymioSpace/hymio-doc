@@ -1,6 +1,8 @@
 # Install & start
 
-Hymio is self-hostable. The local launcher composes the application backend, Casdoor identity service, and Oath. You can start with text and attachments; a cloud desktop is optional.
+Hymio is self-hostable. The local launcher composes the application backend, Casdoor identity
+service and Oath. You can start with conversation and attachments; personal memory and cloud devices
+are optional services/capabilities.
 
 ## Real case: from sign-in to the first phone reply
 
@@ -34,9 +36,32 @@ After startup, register using the Web address printed in the terminal on the mac
 
 Configure a provider credential privately and designate an administrator using product user IDs. The administrator then grants a registered account cloud-resource access in the separate console. See [devices and administration](./devices).
 
+## Enable personal memory
+
+The unified launcher keeps Nostalgia separate by design. Run the
+[Nostalgia service](../nostalgia/operations) on a private network, then give the signed-in Hymio user
+its own endpoint and bearer token through `nostalgia_connections_file` in the Backend's private
+configuration. Do not put that token in the client or a prompt.
+
+Enable dreaming with a private proposal URL pointing to Hymio's internal adapter and a service token
+file. After restart, verify all three states separately:
+
+1. a new note appears in Footprints;
+2. an unavailable service shows a read error, not a fake empty account;
+3. a successful dream adds cited understanding without deleting the original.
+
+See [Nostalgia deployment](../nostalgia/operations) for the full provider and backup contract.
+
 ## Continue on iPhone
 
 The native client connects to a Hymio backend; it does not run Oath or a cloud desktop on the phone. See [Cross-device continuity](./ios) for a real phone-to-computer workflow.
+
+## Connect a personal device
+
+Open **My → Devices → Connect Mac or Android**, then enter the one-time code in HymioDevice. The
+personal device connects outbound, so Hymio does not need an inbound home-network port. OS screen,
+accessibility and notification permissions remain local. Shell access is off until explicitly
+enabled on the Mac.
 
 ## Deploy publicly
 

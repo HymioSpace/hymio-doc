@@ -1,6 +1,14 @@
 # Conversation & clients
 
-One user has one continuing agent conversation. You can leave a client and return from another supported client without creating a new conversation.
+One user has one continuing agent conversation. You can leave a client and return from another
+supported client without creating a new conversation.
+
+## Where the conversation lives
+
+iOS has three primary destinations: **Today**, **Chat** and **My**. Tasks, memory, connections,
+settings, devices and diagnostics are subpages of My. Web and Desktop use a labelled navigation rail
+with a wider content area. The exact navigation surface differs by platform; the conversation,
+account and business records do not.
 
 
 ## Real case: continue a phone packing-list conversation
@@ -13,9 +21,24 @@ This is the running native application rather than a narrow Web viewport. iOS an
 
 ## Send and follow a message
 
-Type in the composer, attach files if needed, and send. A local pending message appears before backend acceptance. Acknowledgment means the input was accepted; it does not mean the model has finished processing it.
+Type in the composer, attach files if needed, and send. A local pending message appears before
+backend acceptance. Acknowledgment means the input was accepted; it does not mean the model has
+finished processing it. On iOS, sending dismisses the keyboard.
 
-Assistant output streams progressively. Working details group intermediate text, reasoning content exposed by the provider, and tool activity. Expand them when you need to inspect the process. Final replies stay outside the completed work group.
+Assistant output streams progressively. Working details group intermediate text, provider-exposed
+reasoning and tool activity. Expand them when you need to inspect the process. Final replies stay
+outside the completed work group.
+
+### Anchoring and blank space
+
+The newest content is the scroll anchor; a fixed spacer or a page-level “bottom” sentinel is not.
+When a working-detail row expands, its content continues downward from the row and the message view
+keeps the last visible content in place. A completion layout change or keyboard frame does not start
+a competing scroll animation.
+
+The user can scroll away from the tail. New tokens then update the existing message without pulling
+the viewport back. Returning to the bottom resumes following. This prevents the iOS layout from
+producing a large blank region above the latest message or jumping when the keyboard closes.
 
 ## Connection and execution are independent
 
@@ -27,14 +50,25 @@ If a message failed to send, inspect its send state before trying again. A lost 
 
 Recent conversation loads from a snapshot, earlier messages load on demand, and live events start after the snapshot checkpoint. Each client window keeps its own delivery progress.
 
-Incoming live text first enters a small display buffer; its visual rate is independent of transport chunk size. History is rendered immediately. This buffer changes presentation only, not event persistence, ACKs or task state.
+Incoming live text first enters a small display buffer; its visual rate is independent of transport
+chunk size. History is rendered immediately. This buffer changes presentation only, not event
+persistence, ACKs or task state.
+
+### Tool activity
+
+The default working view shows what the Agent says it is doing. Every Oath tool call must include a
+semantic `description`; clients use that sentence first, with the tool name as a short secondary
+label. Generic labels such as “run command” or raw JSON do not replace a supplied description.
+
+Tapping into an Agent or trace can reveal the tool, status and bounded result. Raw arguments and
+technical payloads remain a deeper inspection surface.
 
 ## Platform differences
 
 | Client | Interaction |
 | --- | --- |
-| Web / Desktop | Sidebar navigation, keyboard composer, screenshot paste, wider task views |
-| iOS | Native tabs, streaming chat, Hymio UI cards, photo and file input, and image viewing |
+| Web / Desktop | Labelled rail, keyboard composer, screenshot paste and wider task inspector |
+| iOS | Today / Chat / My, streaming chat, Hymio UI cards, photo/file input and image viewing |
 | Operator console | Separate login surface and resource administration; not a conversation client |
 
 For a real iPhone-to-Web walkthrough, see [Cross-device continuity](./ios).

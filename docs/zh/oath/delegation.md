@@ -2,7 +2,8 @@
 
 Oath 现在把持续工作组织成任务系统，而不是一段带了若干临时子 Agent 的无界对话。核心规则只有一句：
 
-> 每个 TaskRun 只有一个 TaskAgent；所有参与协作的 Subagent 都必须绑定到该 TaskRun。
+> 每个 Agent 执行模式的 TaskRun 只有一个 TaskAgent；所有参与协作的 Subagent 都必须绑定到该
+> TaskRun。确定性的 `program` Run 不创建 TaskAgent。
 
 这条规则让多 Agent 工作可观察、可恢复，也让它能被安全地暂停和取消。用户可以只取消某一项任务，
 不需要删除整段对话；可以看清哪个 Agent 在做什么；也可以区分“仍在执行”和“只是安排在未来”。
@@ -12,7 +13,8 @@ Oath 现在把持续工作组织成任务系统，而不是一段带了若干临
 当前模型由五个决定构成：
 
 1. **Task 记录意图，Run 记录一次执行。** “追踪半年减重”是 Task；“周二生成一份报告”是其中一个 Run。
-2. **每个 Run 由一个 TaskAgent 负责。** 交互 Agent 创建任务后回到对话，TaskAgent 在独立 context 中执行。
+2. **每个 Agent Run 由一个 TaskAgent 负责。** 交互 Agent 创建任务后回到对话，TaskAgent 在独立
+   context 中执行；Program Run 只执行确定动作，不启动 Agent。
 3. **所有 Subagent 强制绑定。** 不存在脱离 Task 的后台孩子。临时并行工作也先建立一次性 Task。
 4. **执行方式与时间维度正交。** 一次性调研和长期追踪都可以选择并行 Subagent、Agent Team 或 Dynamic Workflow。
 5. **一级界面展示协作，深层界面展示证据。** 用户先看到状态、结果、Leader 和成员；context、通信、
@@ -62,10 +64,11 @@ Journal、步骤预算、deadline 和终态，只能把结果交回 TaskAgent，
 Team 消息不是一条临时的 WebSocket 通知。每条消息持久保存：
 
 - Task 与 Run；
-- 发送者 Agent ID 与名称；
-- 接收者 Agent ID 与名称；
+- 发送者与接收者 Agent ID；
 - 内容和时间；
 - 可幂等的稳定 message ID。
+
+检查 API 在展示前把 Agent ID 关联到当前名称。
 
 任务一级界面必须直接写成 **发送者 → 接收者**。进入成员页后，再展示完整消息和该成员相关通信。
 
@@ -94,7 +97,7 @@ Leader 被唤醒时收到节点结果。只要还有工作流节点没有完成�
 | --- | --- | --- |
 | Task | Oath 任务数据库 | 持久目标、验收、计划、trigger、策略、预算和长期记忆 |
 | TaskRun | Oath 任务数据库 | 一次执行尝试、状态、检查点、结果、用量和控制 epoch |
-| TaskAgent | 专用委派 Agent | 执行 Run，负责整合和验证 |
+| TaskAgent | Agent Run 的专用委派 Agent | 执行 Run，负责整合和验证 |
 | Team 成员 | 绑定同一 Run 的 Subagent | 完成明确职责，并在 Run 内沟通 |
 | Workflow 节点 | 持久图节点 + 绑定 Subagent | 等待依赖、执行并返回一个有界结果 |
 | 交互 Agent | 主对话 | 创建和控制 Task，同时保持对话响应 |
@@ -106,8 +109,8 @@ Leader 被唤醒时收到节点结果。只要还有工作流节点没有完成�
 1. 交互 Agent 接纳用户目标。
 2. 创建包含 trigger、executor、验收、context、plan 和 budget 的 Task。
 3. 任务调度器创建 queued TaskRun。
-4. Oath 创建 TaskAgent 并绑定到该 Run。
-5. TaskAgent 可以：
+4. Program Run 执行确定动作；Agent Run 创建并绑定 TaskAgent。
+5. 对 Agent Run，TaskAgent 可以：
    - 独立执行；
    - 创建并行 Subagent；
    - 创建 Teammate 并交换持久消息；
@@ -116,6 +119,9 @@ Leader 被唤醒时收到节点结果。只要还有工作流节点没有完成�
 6. 孩子结果通过持久队列返回。
 7. TaskAgent 整合结果并报告完成。
 8. Hymio 展示任务状态和结果；通知投递属于另一条独立链路。
+
+Supervisor 可以从持久状态唤醒或对账这两类 Run。它不是第二个推理模型，也不判断一份研究结果
+是否满足用户的语义目标。
 
 ## 状态机
 
@@ -132,7 +138,7 @@ Leader 被唤醒时收到节点结果。只要还有工作流节点没有完成�
 | 状态 | 含义 |
 | --- | --- |
 | `queued` | 可以获取执行权 |
-| `running` | TaskAgent 正在执行 |
+| `running` | Program 动作或 TaskAgent 正在执行 |
 | `waiting` | 等待明确条件，例如孩子、时间、事件、用户或工具 |
 | `paused` | 已停止，但保留可恢复检查点或等待用户处理 |
 | `succeeded` | 当前 Run 产生了被接受的结果 |
@@ -147,7 +153,8 @@ Leader 被唤醒时收到节点结果。只要还有工作流节点没有完成�
 ### Subagent
 
 成员状态包括 `waiting`、`running`、`succeeded`、`failed`、`cancelled`，也可能暂时 `paused`。
-所属 Run 暂停后，TaskAgent 和正在执行的 child 不能继续对外显示为 `running`。
+所属 Run 暂停后，TaskAgent 和正在执行的 child 不能继续对外显示为 `running`；Program Run
+没有成员记录。
 
 ## 取消和暂停都不是完成
 
@@ -265,9 +272,10 @@ C 端任务页不应原样呈现技术字段，而要转换成稳定层级，并
 - 工具审批按 Agent 生效，child 不会自动继承无限授权。
 - 取消不能撤销已经发生的外部操作，只能阻止后续工作并记录剩余不确定性。
 
-## 下一阶段：从“委派”走向 Agent Team
+## 下一阶段的观察能力
 
-当前实现已经具备必要基础：绑定成员、持久消息、DAG 调度和可观察 context。下一阶段建议按以下顺序演进。
+当前实现已经具备绑定成员、持久通信、DAG 调度和每 Agent activity。后续工作是加深这些层次，
+而不是把现有模式继续写成“未来”。
 
 ### 第一阶段：显式团队名册
 

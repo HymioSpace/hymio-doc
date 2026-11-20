@@ -40,7 +40,8 @@ On top of the event runtime, Oath owns a task system:
 
 - a **Task** records intent, trigger, acceptance, policy, plan and budget;
 - a **TaskRun** records one execution attempt and all resumable state;
-- a **TaskAgent** owns one Run;
+- an Agent-backed Run has one **TaskAgent**; a program Run executes a deterministic action without
+  an Agent;
 - every collaborating **Subagent** is bound to that Run;
 - execution can be program-only, parallel Subagents, Agent Team or Dynamic Workflow.
 
@@ -72,6 +73,7 @@ Completing a Step must not remove input that arrived while it ran. Brain does no
 | Consumers / Intake | Queue admission, durable buffers and fixed input batches |
 | Manager / Workers | Leases, scheduling and a bounded Worker pool |
 | Brain | Context, frozen model requests and postprocessing |
+| Application context adapter | Authenticated application-owned context, bounded before request freeze |
 | Tool system | Invocation identity, approvals, deadlines and terminal results |
 | Storage | SQLite transactions, execution state and the journal |
 | Queue | RabbitMQ delivery, confirmations and outbox relay |

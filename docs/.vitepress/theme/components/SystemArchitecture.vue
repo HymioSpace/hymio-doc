@@ -63,9 +63,9 @@ const nodes = computed(() => [
     icon: "h",
     lines: [
       zh.value
-        ? "身份与授权 · 任务与调度"
-        : "Identity & auth · Tasks & schedules",
-      zh.value ? "附件与媒体 · 设备与配额" : "Attachments & media · Devices",
+        ? "身份与授权 · 连接器与媒体"
+        : "Identity & auth · Connectors & media",
+      zh.value ? "Context 代理 · 设备与配额" : "Context proxy · Devices & quotas",
     ],
     chips: ["HTTP / WS", "Product SQLite"],
     doc: "hymio/architecture",
@@ -80,8 +80,8 @@ const nodes = computed(() => [
     label: "03 / RUNTIME",
     icon: "↗",
     lines: [
-      zh.value ? "接纳输入 → 推理 → 分发工具" : "Intake → Brain → Tools",
-      zh.value ? "事件驱动 · 持久化 · 独立监督" : "Events · Durable · Supervised",
+      zh.value ? "Task / Run · TaskAgent · 工具" : "Task / Run · TaskAgent · Tools",
+      zh.value ? "事件驱动 · 持久化 · Supervisor" : "Events · Durable · Supervisor",
     ],
     chips: ["Gateway / Biz", "Storage / Queue"],
     doc: "oath/architecture",
@@ -92,12 +92,12 @@ const nodes = computed(() => [
     y: 117,
     w: 149,
     h: 140,
-    title: zh.value ? "云设备" : "Cloud devices",
+    title: zh.value ? "执行设备" : "Execution devices",
     label: "04 / EXECUTION",
     icon: "▣",
     lines: [
       "Bash · Browser · CUA",
-      zh.value ? "明确的 device_id" : "Explicit device_id",
+      zh.value ? "个人设备与云电脑" : "Personal and cloud devices",
     ],
     chips: ["Provider API"],
     doc: "hymio/devices",
@@ -115,7 +115,7 @@ const nodes = computed(() => [
       zh.value ? "授权 / 容量 / 生命周期" : "Grants / Capacity / Lifecycle",
     ],
     chips: [],
-    doc: "hymio/devices",
+    doc: "hymio/admin",
   },
   {
     id: "nostalgia",
@@ -124,30 +124,28 @@ const nodes = computed(() => [
     w: 260,
     h: 72,
     title: "Nostalgia",
-    label: zh.value ? "规划 · 个人上下文" : "PLANNED · PERSONAL CONTEXT",
+    label: zh.value ? "当前 · 个人上下文" : "CURRENT · PERSONAL CONTEXT",
     icon: "◷",
     lines: [
       zh.value ? "来源 / 修订 / 检索" : "Provenance / Revisions / Retrieval",
     ],
     chips: [],
     doc: "nostalgia/",
-    planned: true,
   },
   {
-    id: "kits",
+    id: "connectors",
     x: 741,
     y: 265,
     w: 149,
     h: 72,
-    title: "Kits",
-    label: zh.value ? "规划 · 应用能力" : "PLANNED · APPLICATIONS",
-    icon: "◇",
+    title: zh.value ? "连接器" : "Connectors",
+    label: zh.value ? "当前 · 来源同步" : "CURRENT · SOURCE SYNC",
+    icon: "↻",
     lines: [
-      zh.value ? "业务 API / 交互界面" : "Business APIs / User interfaces",
+      zh.value ? "授权 / 同步 / 重试" : "Consent / sync / retry",
     ],
     chips: [],
-    doc: "hymio/architecture",
-    planned: true,
+    doc: "hymio/devices",
   },
 ]);
 const CANVAS_WIDTH = 900;
@@ -192,8 +190,8 @@ const paths = [
     d: "M410 205 H732 V195 H741",
   },
   { id: "admin", d: "M307 265 V250" },
-  { id: "context", d: "M250 250 V302 H445", planned: true },
-  { id: "kit", d: "M365 250 V336 H815 V337", planned: true },
+  { id: "context", d: "M250 250 V302 H445", label: "Context API", x: 335, y: 258 },
+  { id: "connectors", d: "M741 300 H705", label: "records", x: 724, y: 290 },
 ];
 const stages = computed(() =>
   zh.value
@@ -296,33 +294,35 @@ const descriptions = computed(() =>
         models:
           "Oath 调用对话模型，Backend 接入媒体理解与图片生成。API Endpoint 和凭据由服务端配置，客户端不能任意指定。",
         clients:
-          "当前主客户端为 Web、Desktop 与原生 iOS，共用账号与事件协议，各自维护接收游标。浏览器扩展目前是能力脚手架；Apple Watch 与 Android 属于后续规划。",
+          "当前主客户端为 Web、Desktop 与原生 iOS，共用账号与事件协议，各自维护接收游标。iOS 使用“此刻 / 对话 / 我的”三个一级入口；Web 保留带标签侧栏。浏览器扩展仍是脚手架。",
         backend:
-          "产品边界：登录、授权、任务业务状态、附件、设备归属与资源配额。它不拥有 Oath 的执行数据库。",
-        oath: "执行边界：以事件驱动（分路接纳与唤醒）、持久化（Journal、Outbox、租约）和独立监督（Supervisor）为基础，管理输入、模型步骤、工具生命周期与事件投递。",
+          "产品边界：登录、授权、连接器、附件、Context 代理、设备归属与资源配额。任务事实与执行状态归 Oath；个人 Context 原文与发布版本归 Nostalgia。",
+        oath: "执行边界：Task / Run、TaskAgent、Subagent、Supervisor、模型步骤、工具生命周期与事件投递。Supervisor 检查持久状态，不替代 Agent 做语义判断。",
         devices:
-          "实际副作用发生的环境。Hymio 只通过 API 接入 Provider，新用户默认没有云设备。",
+          "实际副作用发生的环境。个人 Mac 与 Android 通过 HymioDevice 出站连接；云电脑由 Provider 分配。iPhone 与 Web 是对话客户端，不是远程控制目标。",
         admin:
           "独立运营入口。管理员配置哪些用户能使用云资源；不直接操作 Agent 执行状态。",
         nostalgia:
-          "设计中：定义个人上下文的来源、版本和检索契约。目前没有服务实现，也未接入当前运行链路。",
-        kits: "规划中的应用扩展：通过业务 API 提供能力与用户界面。通用 Kit 生态尚未实现。",
+          "当前实现：保存原始记录、版本化理解、关系、事件和注入视图；Dreaming 定时生成并原子发布整理结果，任务机会提案必须引用固定窗口内的真实记录。",
+        connectors:
+          "Gmail、滴答清单、Apple 日历与 Apple 健康通过逐项授权、加密凭据和幂等投影写入 Nostalgia。首次接入是只读；来源文本不构成工具指令。",
       }
     : {
         models:
           "Oath calls conversation models; Backend integrates media understanding and image generation. Endpoints and credentials are configured server-side.",
         clients:
-          "Web, Desktop and native iOS are current clients sharing one account and event contract, each with its own cursor. The browser extension is a capability scaffold; Apple Watch and Android are planned.",
+          "Web, Desktop and native iOS are current clients sharing one account and event contract, each with its own cursor. iOS uses Today, Chat and My as its three primary destinations; Web retains a labelled rail. The browser extension remains a scaffold.",
         backend:
-          "The product boundary: login, authorization, task business state, attachments, device ownership and quotas. Oath’s execution database is separate.",
-        oath: "The execution boundary: event-driven intake and wake-ups, durable journal/outbox/leases, and independent supervision shape input, model steps, tools and event delivery.",
+          "The product boundary: login, authorization, connectors, attachments, the context proxy, device ownership and quotas. Oath owns task facts and execution; Nostalgia owns context originals and published versions.",
+        oath: "The execution boundary: Task/Run, TaskAgent, Subagents, Supervisor, model steps, tools and event delivery. Supervisor reconciles durable state; it does not replace an Agent's semantic judgement.",
         devices:
-          "The environment where external effects happen. Hymio integrates through provider APIs. New accounts have no cloud devices by default.",
+          "The environment where external effects happen. Personal Mac and Android connect outbound through HymioDevice; cloud computers come from a provider. iPhone and Web are conversation clients, not remote-control targets.",
         admin:
           "A separate operator entry point for resource entitlements and lifecycle. It does not own agent execution state.",
         nostalgia:
-          "Planned personal-context contracts for provenance, revisions and retrieval. No service implementation or current runtime integration.",
-        kits: "Planned application extensions with business APIs and user interfaces. The general Kit ecosystem is not implemented yet.",
+          "Current implementation: original records, versioned understanding, relations, events and injection views. Dreaming publishes validated drafts atomically; opportunity proposals must cite records in the frozen window.",
+        connectors:
+          "Gmail, Dida, Apple Calendar and Apple Health use per-source consent, encrypted credentials and idempotent projection into Nostalgia. Initial access is read-only; source text never authorizes tools.",
       },
 );
 const stage = computed(() => stages.value[current.value]);
@@ -483,8 +483,8 @@ onUnmounted(() => {
           <text x="10" y="350" class="diagram-caption">
             {{
               zh
-                ? "实线：当前调用关系 · 虚线：规划集成"
-                : "SOLID: CURRENT INTERFACES · DASHED: PLANNED INTEGRATIONS"
+                ? "当前接口：产品 API、Context、执行与设备"
+                : "CURRENT INTERFACES: PRODUCT API, CONTEXT, EXECUTION AND DEVICES"
             }}
           </text>
         </svg>
@@ -566,7 +566,7 @@ onUnmounted(() => {
         <span class="architecture-mobile-index">02 / APPLICATION</span>
         <strong>Hymio Backend</strong>
         <small>{{
-          zh ? "身份 · 任务 · 设备与配额" : "Identity · Tasks · Devices"
+          zh ? "身份 · 连接器 · Context · 设备" : "Identity · Connectors · Context · Devices"
         }}</small>
       </button>
       <span class="architecture-mobile-arrow" aria-hidden="true">↓</span>
@@ -606,8 +606,8 @@ onUnmounted(() => {
       <p class="architecture-mobile-planned">
         {{
           zh
-            ? "规划中：浏览器扩展、Apple Watch、Android · Nostalgia · Kits"
-            : "Planned: Extension, Apple Watch, Android · Nostalgia · Kits"
+            ? "当前主链路：连接器 → Nostalgia → Oath · HymioDevice → 执行设备"
+            : "Current path: Connectors → Nostalgia → Oath · HymioDevice → execution devices"
         }}
       </p>
     </div>

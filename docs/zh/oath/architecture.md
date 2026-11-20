@@ -40,7 +40,7 @@ Supervisor 是独立观察待办工作的服务。当前它会定期检查持久
 
 - **Task** 保存目标、trigger、验收、策略、计划与预算；
 - **TaskRun** 保存一次执行尝试及全部可恢复状态；
-- **TaskAgent** 负责一个 Run；
+- Agent 执行模式的 Run 由一个 **TaskAgent** 负责；Program Run 执行确定动作，不创建 Agent；
 - 所有参与协作的 **Subagent** 都绑定该 Run；
 - 执行方式可以是 program、并行 Subagent、Agent Team 或 Dynamic Workflow。
 
@@ -71,6 +71,7 @@ Supervisor 是独立观察待办工作的服务。当前它会定期检查持久
 | Consumer / Intake | 队列接纳、持久 buffer、固定输入批次 |
 | Manager / Worker | lease、调度与有界 Worker 池 |
 | Brain | context、固定模型请求与后处理 |
+| 应用 Context adapter | 在请求冻结前读取认证的应用自有 Context，并限制边界 |
 | Tool system | Invocation identity、审批、deadline 与终态 |
 | Storage | SQLite 事务、执行状态与 Journal |
 | Queue | RabbitMQ 投递、confirm 与 Outbox relay |
@@ -87,7 +88,7 @@ Supervisor 是独立观察待办工作的服务。当前它会定期检查持久
 | 连接自己的客户端 | [WebSocket 与 HTTP](./protocol) |
 | 添加 Tool、CLI 或 Skill | [扩展能力](./extensions) |
 | 配置模型、Prompt 与鉴权 | [运行时配置](./configuration) |
-| 委派有界子任务 | [子 Agent 与应用事件](./delegation) |
+| 委派有界子任务 | [多 Agent 任务与协作](./delegation) |
 
 一个常见接入顺序是：
 

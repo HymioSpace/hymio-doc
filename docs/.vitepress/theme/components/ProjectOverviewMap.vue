@@ -6,14 +6,14 @@ const { lang } = useData();
 const zh = computed(() => lang.value.startsWith("zh"));
 const context = computed(() => props.kind === "nostalgia");
 const title = computed(() => context.value
-  ? (zh.value ? "Nostalgia：上下文的来源、管理与使用" : "Nostalgia: context sources, management and use")
+  ? (zh.value ? "Nostalgia：从来源到可追溯的个人理解" : "Nostalgia: from sources to attributable personal context")
   : (zh.value ? "Hymio：从客户端到 Agent 执行" : "Hymio: from clients to agent execution"));
 const nodes = computed(() => context.value ? [
-  { x: 16, y: 48, w: 148, h: 88, title: zh.value ? "文件与外部应用" : "Files & applications", lines: [zh.value ? "笔记、计划、资料" : "Notes, plans, documents"] },
-  { x: 204, y: 48, w: 148, h: 88, title: zh.value ? "应用连接器" : "App connector", lines: [zh.value ? "读取与同步来源" : "Read and sync sources"] },
-  { x: 392, y: 48, w: 148, h: 88, title: "Nostalgia", lines: [zh.value ? "组织 Context" : "Organize context", zh.value ? "记录来源与修订" : "Sources and revisions"], accent: true },
-  { x: 580, y: 48, w: 148, h: 88, title: "Agent", lines: [zh.value ? "检索资料与背景" : "Retrieve information", zh.value ? "参考内容推进工作" : "Use it to inform work"] },
-  { x: 342, y: 205, w: 248, h: 68, title: zh.value ? "来源 · 版本 · 派生关系" : "Sources · revisions · provenance", lines: [zh.value ? "让检索结果可以追溯" : "Keep retrieved content attributable"] },
+  { x: 16, y: 48, w: 148, h: 88, title: zh.value ? "真实来源" : "Real sources", lines: [zh.value ? "对话 · 手记 · 连接器" : "Chat · notes · connectors"] },
+  { x: 204, y: 48, w: 148, h: 88, title: zh.value ? "Hymio 采集" : "Hymio ingestion", lines: [zh.value ? "授权、解析与幂等写入" : "Consent, parsing, retry"] },
+  { x: 392, y: 48, w: 148, h: 88, title: "Nostalgia", lines: [zh.value ? "原文、发布与回滚" : "Originals and publication", zh.value ? "Dreaming 与事件" : "Dreaming and events"], accent: true },
+  { x: 580, y: 48, w: 148, h: 88, title: zh.value ? "Oath Agent" : "Oath Agent", lines: [zh.value ? "稳定装配与 recall" : "Stable assembly & recall", zh.value ? "证据不授予权限" : "Evidence grants no authority"] },
+  { x: 342, y: 205, w: 248, h: 68, title: zh.value ? "已发布理解 · 关系 · 回执" : "Published understanding · relations · receipts", lines: [zh.value ? "同一事务提交，可追溯、可回滚" : "Atomic, attributable and reversible"] },
 ] : [
   { x: 16, y: 48, w: 148, h: 88, title: zh.value ? "客户端" : "Clients", lines: ["Web · Desktop · iOS", zh.value ? "对话与进展展示" : "Chat and progress"] },
   { x: 204, y: 48, w: 148, h: 88, title: "Hymio Backend", lines: [zh.value ? "账号与权限校验" : "Identity and permissions", zh.value ? "产品 API 与网关" : "Product API and gateway"], accent: true },
@@ -39,7 +39,7 @@ const edges = computed(() => [
       <svg class="project-overview-canvas" viewBox="0 0 744 300" role="img" :aria-label="title">
         <title>{{ title }}</title>
         <desc>{{ context
-          ? (zh ? "应用连接器将外部内容交给 Nostalgia，保留来源和修订，再为 Agent 提供可检索上下文。全部为设计流程。" : "Connectors supply external content to Nostalgia, which preserves sources and revisions for agent retrieval. This is a planned flow.")
+          ? (zh ? "Hymio 在用户授权后将真实来源幂等写入 Nostalgia；Nostalgia 原子发布整理结果，并为 Oath Agent 提供稳定装配和有界检索。" : "After user consent, Hymio writes source material to Nostalgia. Nostalgia publishes attributable understanding atomically and serves bounded retrieval to the Oath Agent.")
           : (zh ? "客户端连接 Hymio Backend，Backend 管理账号、任务、附件和设备，并通过 Oath 调用模型与工具。设备工具通过 Backend 访问已授权的云电脑。" : "Clients connect to Hymio Backend, which manages identity, tasks, files and devices and uses Oath for models and tools. Device tools access authorized computers through Backend.") }}</desc>
         <defs><marker :id="`project-arrow-${kind}`" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="var(--vp-c-text-2)" /></marker></defs>
         <g v-for="edge in edges" :key="edge.d" class="oath-map-edge">
@@ -54,7 +54,7 @@ const edges = computed(() => [
       </svg>
     </div>
     <figcaption>{{ context
-      ? (zh ? "设计流程：连接器收集来源，Nostalgia 整理上下文；尚未实现服务或 Hymio 集成。" : "Planned flow: connectors collect sources; Nostalgia organizes context. No service or Hymio integration exists yet.")
+      ? (zh ? "当前实现：采集、版本化发布和 Agent 检索已接入；检索仍是权威扫描，语义召回与大图谱不在当前范围。" : "Current implementation: ingestion, versioned publication and agent retrieval are integrated. Retrieval remains an authoritative scan; semantic recall and large-graph indexing are out of scope.")
       : (zh ? "Hymio 组合产品能力，Oath 推进 Agent 执行。设备调用经过 Backend 的授权边界。" : "Hymio integrates product capabilities; Oath advances agent execution. Device calls pass through Backend authorization.") }}</figcaption>
   </figure>
 </template>

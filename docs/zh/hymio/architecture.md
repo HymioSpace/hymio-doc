@@ -1,67 +1,127 @@
 # 应用架构
 
-Hymio 是模块化应用 monorepo，Oath 是独立运行时。客户端使用产品 API 和鉴权网关，不负责启动运行底座。
+Hymio 是模块化应用 monorepo，各运行时独立。客户端调用认证产品 API；Hymio 拥有产品状态与策略，
+Oath 拥有任务 / Agent 执行，Nostalgia 拥有个人 Context 状态。
 
-## 真实案例：一份行程文件如何出现在两端
+## 一次请求经过什么
 
-[附件案例](./media#真实案例-把行程笔记作为资料发给助手)实际完成了这条链路：Web 上传 `trip-notes.txt`，Backend 保存账号下的附件；用户消息引用该文件，Oath 推进模型与所需工具；回复通过事件链路出现在 Web 和原生 iOS。
+<SystemArchitecture />
 
-手机并没有再上传一份文件，也没有在本机执行解析服务。这个案例把客户端输入、产品文件归属、Agent 执行和多端展示四个边界放在了一次可复现操作里。
+普通消息路径：
 
-## 请求链路
+1. Web、Desktop 或 iOS 携带产品凭据与稳定 client identity；
+2. Backend 验证账号、模型 / 窗口选择与附件所有权；
+3. Oath 持久接纳输入，认领有界 step，构建请求并调用模型；
+4. 工具调用经 Hymio 认证产品 API 返回；工具生命周期仍归 Oath；
+5. 输出成为持久事件，每个客户端保存并确认自己的游标。
 
-<ProjectOverviewMap kind="hymio" />
-
-公网 WebSocket 入口为 Backend 的 `/agent/ws`，Oath 地址属于私有上游配置。相同产品用户 ID 用于隔离任务、附件、设备与持续对话。
+个人 Context 路径中，Hymio 在应用 Context 装配时向 Nostalgia 读取稳定 `_core` 与 `_index`。
+Agent 可通过 `recall` 做有界搜索、关系扩展和精确依据读取。Context 只是数据，不授予工具权限。
 
 ## 客户端范围
 
-| 客户端 | 状态 | 说明 |
+| 客户端或代理 | 状态 | 边界 |
 | --- | --- | --- |
-| Web / Desktop | 当前 | 共用 React 前端，通过 Backend 的产品 API 与 `/agent/ws` 接入 |
-| iOS | 当前 | 原生 SwiftUI，使用相同后端和事件契约 |
-| 浏览器扩展 | 脚手架 | 已有职责目录，页面捕获与主客户端能力仍在开发 |
-| Apple Watch | 规划 | 适合快速输入、通知和任务状态查看 |
-| Android | 规划 | 计划复用后端、鉴权和事件协议 |
+| Web / Desktop | 当前 | 共享 React 前端、带标签侧栏、任务 inspector 与 A2UI renderer |
+| iOS | 当前 | 原生 SwiftUI、三个一级入口、系统媒体 / 权限与 A2UI renderer |
+| HymioDevice macOS | 当前 | 出站 WSS、截图 / 桌面 / 浏览器与显式开启的本机 Shell |
+| HymioDevice Android | 当前执行适配器 | 屏幕共享、无障碍动作，不暴露 Bash |
+| 浏览器扩展 | 脚手架 | 尚无 build manifest 或页面采集产品路径 |
+| Apple Watch | 尚未交付 | 当前产品没有客户端实现 |
+| Hymio Android App | 尚未交付 | Android 执行适配器不等于完整 Hymio 对话应用 |
 
-多端共享账号和产品状态，但每台客户端维护自己的事件 cursor。客户端关闭不会取消 Oath 已接纳的工作。
+客户端共享账号、对话、任务和记忆 API，但每个安装维护独立的 event cursor。关闭客户端不会撤销
+服务端已接纳的工作。
 
-## 目录
+## 仓库结构
 
 | 目录 | 职责 |
 | --- | --- |
-| `apps/client` | React Web / Tauri 客户端 |
-| `apps/ios` | 原生 SwiftUI 客户端 |
-| `apps/admin` | 独立管理平台 |
-| `packages/client`、`packages/protocol` | 客户端传输与共享契约 |
-| `packages/ui` | 设计 Token 与 Web 组件 |
-| `backend/hymio_backend` | 身份、任务、媒体、设备与网关 |
-| `extensions/{skills,tools,cli}` | Oath 加载的应用能力 |
-| `deploy` | 本机与云端组合部署 |
+| `apps/client` | React Web 与 Tauri Desktop |
+| `apps/ios` | 原生 SwiftUI 客户端与平台能力 |
+| `apps/admin` | 资源、监控、工具与 Nostalgia 运营管理台 |
+| `apps/chrome` | 浏览器扩展责任脚手架 |
+| `packages/client`、`packages/protocol` | 客户端传输、共享契约与事件处理 |
+| `packages/ui`、`packages/a2ui` | 设计 tokens / 组件与受限 Hymio UI renderer |
+| `backend/hymio_backend` | 身份、连接器、Context 代理、媒体、任务投影、设备与管理 API |
+| `extensions/{skills,tools,cli}` | 通过 Oath 加载的 Hymio 能力 |
+| `deploy` | 本机与单主机云端组合 |
 
-## 状态归属
+旧的 `kits/` 与 `services/kit-host` 已不在当前源码树中。
 
-Backend 的产品 SQLite 数据库存储账号映射、哈希凭据、附件与设备操作记录。Oath 负责 Task、Run、Agent
-执行及其独立 Storage 数据库。Hymio 通过鉴权后的 Oath bridge 读取和控制任务，不再维护第二套任务调度器
-或第二份任务业务状态。
+## 状态所有权
 
-Backend 在边界校验用户凭据；内部路由使用服务鉴权，由受信调用方传递权威用户上下文。CLI 与 Tool 适配器不单独实现账号或配额数据库。
+| 状态 | 所有者 |
+| --- | --- |
+| 账号、session、连接器版本与加密 Provider 凭据 | Hymio Backend SQLite |
+| 附件、生成媒体、通知投递与设备许可 | Hymio Backend |
+| 个人 Context 原始记录、卡片、关系、事件与发布版本 | Nostalgia |
+| Task、Run、TaskAgent、检查点、工具状态与 Agent Context | Oath |
+| 客户端投递游标 | 每个已认证客户端安装 |
+
+Hymio 不保留第二套任务业务状态，也不建第二套记忆数据库；它只代理并投影所有权服务的当前状态。
 
 ## 任务投影
 
-任务界面是产品投影，不是状态所有者：
+Hymio 公共任务 API 有意保持有限：
 
-- Oath 校验并执行 Task/Run 状态；
-- Backend 把 Oath 响应映射成稳定的移动端/Web 字段；
-- 暂停、恢复和取消转发给 Oath；
-- Oath 请求投递结果后，Hymio 再发送通知；
-- 已取消 Task 不进入当前列表，也不会被映射到成功分组。
+- `GET /tasks` 列出当前已认证用户的任务；
+- `POST /tasks` 读取一个任务，或转发 `pause`、`resume`、`cancel`；
+- 创建任务和修改要求仍由 Agent 通过 Oath 工具完成。
 
-UI 把时间维度和执行方式分开，异常只出现在对应任务内部，Agent context、Team 消息和工具调用放在
-更深一层。详见[任务与多 Agent 工作](./tasks)。
+Backend 把 Oath Task / Run 映射成稳定产品字段。界面展示时间范围、执行方式、当前阻塞、绑定 Agent、
+Team 消息和 Workflow 依赖。已取消 Task 会从活动列表过滤，绝不重新映射成成功。
 
-## 增加应用能力
+## Context 路径
 
-把校验和业务状态放在 Backend 服务中，提供有界、鉴权的操作，再增加轻量 Tool 或 CLI 适配器，以及说明使用时机的 Skill。UI 操作遵循同一套权限与业务规则。
+```mermaid
+flowchart LR
+  Connector[Hymio 连接器] -->|来源版本| Store[(Hymio connector store)]
+  Store -->|幂等记录| N[Nostalgia]
+  N -->|assembly 与事件| API[Hymio Context proxy]
+  Oath[Oath 应用 Context] -->|私有服务 token| API
+  Web[iOS / Web 记忆界面] -->|认证 API| API
+  N -->|dream 输入| Proposal[Backend proposal adapter]
+  Proposal -->|只能经 Nostalgia 写入的 JSON| N
+```
 
-Nostalgia 和 Kit 尚不是当前安装的运行依赖。未来通过公开契约集成，避免把其他项目核心实现复制进 Hymio。
+Backend 从私有配置解析每用户 Nostalgia endpoint 与 token。浏览器、Oath 和模型都不会取得这些
+凭据。Oath 从 Hymio 获得有界应用 Context；证据读取仍以 Nostalgia 为准。
+
+## 连接器
+
+Gmail、滴答清单、选定 Apple 日历和每日 Apple 健康摘要是彼此独立的只读来源。生命周期为：
+
+1. 用户明确同意，完成 Provider / OS 授权；
+2. 使用加密凭据和有租约的有限采集；
+3. 原子更新本地来源版本与 checkpoint；
+4. 带预期前序记录，以幂等操作投影到 Nostalgia；
+5. 展示同步回执并独立重试。
+
+远程文本是不可信证据。一封邮件或一条日历事件不能授权工具，也不能证明 Hymio 已修改外部系统。
+
+## 执行设备
+
+Web 与 iPhone 承载对话。个人 Mac 或 Android 通过出站 WebSocket 暴露原生能力；托管云电脑由
+Provider 分配。同一显式 `device_id` 约束命令、截图与命令状态。
+
+- Bash 优先选择在线个人 Mac，并明确报告 cloud fallback。
+- Browser 与桌面操作保持在同一选定设备。
+- 超时或断线可能留下未知副作用，不能盲目重放。
+- Pause / resume / revoke 影响后续执行，不能撤销已经发生的动作。
+
+## UI 与渲染
+
+iOS / Web 收敛层已经采用 Material 3 色彩角色、色调表面、形状层级、导航几何与交互状态规范；
+平台原生字体与图标是明确例外。
+
+生成式 assistant UI 是另一套受限 A2UI 子集，只渲染卡片、文本、指标、选择、输入和会发送普通
+消息的按钮。它不能执行任意 HTML、脚本、网络请求或隐藏工具调用。
+
+## 扩展边界
+
+产品校验留在 Backend。通过 Tool、CLI 或 Skill 暴露有界能力，并让私有凭据远离 prompt 和客户端
+bundle。每次工具调用都必须带简短语义描述供探索过程展示；具体命令语法属于更深层的调试或运营
+界面。
+
+继续阅读[任务、Agent 与日历](./tasks)、[HTTP API](./api)、[UI/UX](./ui)与[进度页](../status)。

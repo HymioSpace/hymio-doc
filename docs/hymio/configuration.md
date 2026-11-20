@@ -23,9 +23,11 @@ lan_host = "off"   # Use "auto" for LAN development
 | --- | --- |
 | `minimax_api_key`, `minimax_api_base` | Model account and compatible endpoint |
 | `models`, `vision_model` | Conversation allowlist and media model |
+| `model_context_windows` | Confirmed context capacity per model; mirrors the Oath map |
 | `daytona_api_key`, `daytona_api_url`, `daytona_snapshot` | Hosted desktop connection |
 | `admin_user_ids` | Operator-console access |
 | `device_api_targets` | Operator-assigned HTTPS device hosts |
+| `task_parallelism` | Bound for concurrent task-owned children; Oath capacity still applies |
 | `casdoor_port` | Identity service port; default 8000 |
 | `invitation_codes` | Local signup invitation list |
 | `lan_host` | `off`, `auto`, or configured LAN host |
@@ -64,6 +66,33 @@ Cloud deployment combines HTTPS routing, Web, Backend, identity and Oath. Produc
 ```
 
 Keep HTTPS/WSS, allowed origins and OIDC callbacks consistent with the chosen public origin. Preserve databases, Vault recovery material and identity data in backups.
+
+## Personal memory and provider credentials
+
+Nostalgia is a private dependency, not a setting that can point at an arbitrary URL supplied by a
+client. Backend stores a per-user binding and token file. Keep the binding outside the checkout and
+mount the private directory read-only where possible.
+
+Connector credentials are also private operator inputs:
+
+- Gmail and Dida use complete client-ID/secret pairs from environment variables or a private
+  `connectors_config_file`.
+- Apple Calendar and Health use the signed iOS entitlement, OS permission and explicit upload
+  consent; they have no Web OAuth registration.
+- Connector tokens are encrypted by a key next to the Backend database. Back up the database and
+  `.connectors.key` together.
+- APNs keys, team/key IDs and bundle IDs belong in Backend private configuration.
+
+The UI must show deployment-not-configured, authorization-required and temporary-sync-error states
+separately. A missing registration is not an empty source.
+
+## Notification policy
+
+The notification setting controls which delivery classes may use APNs and whether previews appear
+on the lock screen. It does not rewrite the Agent's semantic `notify_user` message. Task start,
+completion and attention notices originate from task state; the Agent does not invent them.
+
+Kits application generation, the Kit Host and `kit_*` tools are retired and require no configuration.
 
 
 The cloud source directory is `deploy/cloud`. Prepare a domain and HTTPS, install Docker, Compose, Python 3.11+ and Oath, and configure Backend, Oath, identity and private credentials on the host. The current topology supports one host and one Backend instance.

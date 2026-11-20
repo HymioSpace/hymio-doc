@@ -31,6 +31,25 @@ This replaces application instructions with a read-only UTF-8 Markdown file. Alt
 
 Keep role, style and capability guidance stable. Oath appends the actual workspace and Skill index; changing runtime facts belong in later inputs. Restart to reload instructions. Already frozen requests retain their prepared contents.
 
+## Application context provider
+
+An application can configure one bounded authenticated HTTP context provider:
+
+```sh
+oath start \
+  --context-provider http://backend:8080/internal/agent/context \
+  --context-provider-token-file /private/context-provider-token
+```
+
+Oath sends the authenticated owner, optional delegated `agent_id` and client channel. The response
+is inserted into the application-context portion of a frozen model request before compaction
+accounting. Oath stores no personal-memory schema. Hymio/Nostalgia own context freshness, source
+policy and retrieval.
+
+A failed provider is represented as unavailable; Oath does not silently invent prior personal
+facts. Context text is data and cannot grant tool permission. The private token file is mounted only
+into Worker components that need it.
+
 ## Authentication modes
 
 | Mode | Identity source |
@@ -63,6 +82,8 @@ Rejected, expired or unavailable verification denies access. Gateway rechecks li
 | `agent.builtin_bash` | Disable when replacing host Bash with device-aware execution |
 | `agent.workspace_root` | Default execution workspace |
 | `agent.skill_index_tokens` | Prompt budget for Skill index |
+| `agent.context_provider_url` | Optional application context endpoint |
+| `agent.permission_policy_url` | Private tool authorization endpoint |
 | `services.workers` | Shared Worker pool size |
 | `services.lease_seconds` | Execution ownership lease |
 | `supervisor.invoke_interval_seconds` | Pending-work observation interval |

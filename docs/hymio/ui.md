@@ -1,4 +1,56 @@
-# A2UI: Hymio UI examples & protocol
+# UI/UX and A2UI
+
+Hymio has two UI layers with different responsibilities:
+
+- the **product shell** for Today, Chat, My, tasks, memory and settings;
+- the restricted **Hymio UI / A2UI** catalog that renders model-generated cards inside a reply.
+
+Both use the same visual language, but generated assistant UI cannot replace or control the product
+shell.
+
+## Product hierarchy
+
+| Window | Primary navigation |
+| --- | --- |
+| Compact iOS | Bottom navigation with Today, Chat and My |
+| Medium/expanded Web or Desktop | Labelled navigation rail and a wider content pane |
+
+Tasks, memory, connections, settings and devices are not additional iOS primary tabs. They open from
+My, and each destination keeps the platform back path. Detail pages use progressive disclosure:
+summary first, Agent responsibility/result next, raw execution last.
+
+The screen answers the current user question before exposing implementation. A task list shows what
+needs attention and what was produced; it does not lead with a scheduler diagram. A memory card
+shows the understanding or footprint first; evidence opens on demand.
+
+## Conversation geometry
+
+Scroll anchoring is based on visible message/detail content:
+
+- sending does not leave a fixed blank spacer above the latest row;
+- keyboard dismissal does not trigger a competing scroll animation;
+- expanding working details grows downward from their row;
+- user scrolling away from the bottom detaches following until the user returns;
+- completed Markdown must not collapse or replace an existing visible frame in a way that jumps the
+  viewport.
+
+Only new streaming text changes on the active tail. History and unchanged message rows keep stable
+identity and layout. Semantic tool descriptions are primary copy; command syntax and JSON are deeper
+detail.
+
+## Loading, empty and failure
+
+Every list defines those three states separately:
+
+| State | Required behavior |
+| --- | --- |
+| Loading | Show progress only for the unresolved scope; preserve already-visible content |
+| Confirmed empty | Explain what will appear and offer the smallest relevant action |
+| Read failure | Say it could not be read and offer retry; never label it “empty” |
+
+An empty memory layer can offer “View footprints” or “Add a memory”. A failed Nostalgia read cannot
+claim the account has no memory. A task detail with no selection shows a compact instruction, not a
+blank pane.
 
 Hymio UI v1 renders a controlled component tree inside assistant Markdown. Web and iOS interpret the same data using their own renderers. This is a limited Hymio protocol, not a claim of compatibility with every A2UI or json-render feature.
 
@@ -94,11 +146,11 @@ Each block is limited to 64 KiB, 64 nodes, depth 12, and 2,000 characters per fi
 
 The model-facing catalog lives in [the Hymio UI Skill](https://github.com/HymioSpace/Hymio/blob/main/extensions/skills/hymio-ui/SKILL.md). It is loaded through the application's Skill directory.
 
-## Material 3 application shell
+## Material 3 convergence layer
 
-Hymio UI and product navigation now share a Material Design 3 foundation. This is separate from the
-model-generated A2UI catalog: A2UI controls assistant content, while the application shell controls
-the product itself.
+Hymio's iOS and Web surfaces use a Material Design 3 convergence layer while the existing page CSS
+is migrated. This is implementation scope, not a claim that every legacy control is pixel-perfect
+Material.
 
 ### Tokens and surfaces
 
@@ -110,10 +162,11 @@ the product itself.
 
 ### Navigation
 
-- Compact iOS/Web uses a standard bottom navigation bar rather than a floating capsule.
+- Compact iOS uses a three-destination bottom navigation bar rather than a floating capsule.
 - Desktop Web uses a navigation rail.
 - Selected destinations get a tonal indicator and clear foreground color, not a shadow-heavy card.
 - The bottom bar stays edge-aligned and preserves the safe area.
+- One destination is not raised or visually detached from the other primary destinations.
 
 ### Content hierarchy
 
@@ -123,9 +176,13 @@ the product itself.
 - Agent communication is written as `Sender → Recipient`.
 - Raw traces and tool JSON stay in developer/operator views.
 
+Platform typography and icons remain explicit exceptions: iOS keeps SF Pro/SF Symbols, while layout,
+color roles, shape and interaction state follow the Material system.
+
 ### Accessibility and states
 
-- Touch targets are at least 48pt on iOS and 48px on Web.
+- New shared shell controls target at least 48pt on iOS and 48px on Web. Platform-native controls
+  that have not migrated may still use their existing minimums and are included in migration QA.
 - Keyboard focus uses a visible ring on Web.
 - Selected, pressed, disabled, loading, empty and error states must be distinguishable without color
   alone.
