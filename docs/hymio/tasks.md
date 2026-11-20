@@ -129,6 +129,13 @@ Architecture research → Research leader
 Research leader → Framework comparison
 ```
 
+Responsibilities use a readable summary with full constraints available on demand. Completion
+criteria use body-level emphasis instead of low-contrast helper text. Execution records render
+Markdown headings, lists, tables and code instead of truncating the Markdown source. Responsibilities,
+completion criteria, collaboration, timeline and tools share one continuous surface separated by
+section rules rather than becoming a stack of nested cards. Internal workflow fields such as
+`Dependencies: []` and fixed injected boundary sentences never appear in the consumer task page.
+
 The sending Agent and receiving Agent are always named. Selecting a member opens:
 
 - responsibility and acceptance;

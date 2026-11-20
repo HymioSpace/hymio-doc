@@ -31,14 +31,16 @@ outside the completed work group.
 
 ### Anchoring and blank space
 
-The newest content is the scroll anchor; a fixed spacer or a page-level “bottom” sentinel is not.
-When a working-detail row expands, its content continues downward from the row and the message view
-keeps the last visible content in place. A completion layout change or keyboard frame does not start
-a competing scroll animation.
+The scroll target is a one-point invisible marker at the end of the transcript; it never creates a
+visible blank region. Content growth, keyboard changes and shell safe-area changes are corrected only
+after layout instead of storing a scroll offset that can become stale. Expanding working details
+pauses automatic following while the details grow downward from their row. Only a real user drag
+pauses following; system layout changes do not.
 
 The user can scroll away from the tail. New tokens then update the existing message without pulling
-the viewport back. Returning to the bottom resumes following. This prevents the iOS layout from
-producing a large blank region above the latest message or jumping when the keyboard closes.
+the viewport back. Returning to the bottom resumes following. While a local message is waiting for
+its first reply, that sent message must remain visible. iOS must not show an empty transcript or jump
+when the keyboard closes or working details grow.
 
 ## Connection and execution are independent
 
