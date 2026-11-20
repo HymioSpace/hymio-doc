@@ -103,6 +103,10 @@ Leader 被唤醒时收到节点结果。只要还有工作流节点没有完成�
 每个节点必须可以独立验证，并明确输入、范围、排除项和有界输出。依赖必须代表真实的数据或决策交接。
 C 端以 DAG 展示节点与有向边；这里不展示 Agent 间通信，因为通信属于 Agent Team。
 
+节点进入 ready 状态时，调度器必须把全部依赖节点的有界输出注入它的 assignment。节点不能再去设备、
+对话历史或文件系统里重新寻找这些输入。TaskAgent 每完成一批有意义的工具工作，或每经过 8 个 active
+step，就要发送一次简短进度 checkpoint，避免后台 token 消耗变成用户不可见的循环。
+
 交互 Agent 可以提出初始 Task plan，但不能调用 `workflow_define`；运行中的 DAG 属于绑定该 Run
 的 TaskAgent。节点保存在 `task_workflow_nodes` 表中，按 Run 隔离，每行记录依赖列表和绑定
 Subagent，不存在外部 DAG 文件。

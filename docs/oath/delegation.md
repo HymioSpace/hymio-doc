@@ -120,6 +120,11 @@ output. Dependencies must represent a real data or decision handoff. The consume
 edges as a DAG; it does not display Agent-to-Agent communication because that concept belongs to
 Agent Team.
 
+When a node becomes ready, the scheduler injects the bounded outputs of every dependency into its
+assignment. The node must not scan devices, conversation history or the filesystem to rediscover
+those inputs. The TaskAgent also sends a concise progress checkpoint after each meaningful tool
+batch or eight active steps so background token use never becomes an invisible loop.
+
 The interaction Agent may propose the initial Task plan. It cannot call `workflow_define`; the bound
 TaskAgent owns that operation. Nodes are rows in `task_workflow_nodes`, scoped by Run, with each row
 recording its dependency list and bound Subagent. No workflow graph is stored in an external file.
