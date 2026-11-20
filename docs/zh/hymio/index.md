@@ -4,13 +4,13 @@ Hymio 是基于 Oath 的个人助手应用，提供客户端、账号、持续�
 
 这里先解释常见概念，再按目标进入使用与开发文档。如果要把 Oath 接进其他产品，请阅读 [Oath 文档](../oath/)。
 
-<DocGallery :images='[{"src": "/screenshots/hymio-ios-chat.png", "label": "iOS", "caption": "原生 iOS 实录：演示账号收到实际旅行清单回复。"}, {"src": "/screenshots/hymio-home.png", "label": "Web", "caption": "保留的 Web「此刻」图例：独立演示账号与合成任务。"}]' />
+<DocGallery :images='[{"src": "/screenshots/hymio-material-home.png", "label": "iOS · Material 外壳", "caption": "当前紧凑 Material 导航与 tonal 任务层级。"}, {"src": "/screenshots/hymio-material-tasks.png", "label": "iOS · 任务", "caption": "当前任务列表：按时间维度分组，没有顶部重复告警。"}]' />
 
 ## 真实案例索引
 
 - **手机发起，电脑继续**：[多端互通](./ios)记录了一次 iPhone 发清单请求、Web 接着精简、手机收到结果的完整过程。
 - **带着资料提问**：[模型与附件](./media)展示模型偏好同步、行程文件上传和 iPhone 查看实际整理结果。
-- **把一件事交出去**：[任务与调度](./tasks)展示原生 iOS 创建任务、等待推进和查看真实完成结果。
+- **把一件事交出去**：[任务与多 Agent 工作](./tasks)说明时间维度、执行方式、协作与取消语义。
 - **用卡片做选择**：[A2UI](./ui)展示实际模型生成的原生卡片和点击后的普通用户消息。
 - **先开资源权限**：[云设备与管理](./devices)和[管理平台](./admin)区分账号在线、资源授权与设备分配，并展示实际保存的授权。
 
@@ -53,7 +53,8 @@ Hymio 是基于 Oath 的个人助手应用，提供客户端、账号、持续�
 
 ## 产品边界
 
-Hymio 负责身份、授权、任务状态、上传和设备分配；Oath 负责 Agent 执行与事件投递。Nostalgia 是独立的个人上下文设计项目，目前尚未接入。
+Hymio 负责身份、产品授权、上传、设备分配和任务展示投影；Oath 负责持久 Task/Run 生命周期、Agent
+执行与事件投递。Nostalgia 是独立的个人上下文设计项目，目前尚未接入。
 
 Web 与 Tauri 共用 React 前端；iOS 是原生 SwiftUI 客户端，使用相同后端和事件契约。管理平台是独立的 `/admin/` 应用。Chrome 扩展已有结构，但尚不具备主客户端的完整能力。
 

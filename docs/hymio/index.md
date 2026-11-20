@@ -4,13 +4,13 @@ Hymio is a personal-assistant application built on Oath. It provides clients, ac
 
 Start with the concepts below, then choose a guide for using or extending the application. To embed Oath in another application, start with the [Oath documentation](../oath/).
 
-<DocGallery :images='[{"src": "/screenshots/hymio-ios-chat.png", "label": "iOS", "caption": "Native iOS: a demo account receives an actual packing-list reply."}, {"src": "/screenshots/hymio-home.png", "label": "Web", "caption": "Original Web home example: an isolated demo account and synthetic tasks."}]' />
+<DocGallery :images='[{"src": "/screenshots/hymio-material-home.png", "label": "iOS · Material shell", "caption": "Current compact Material navigation and tonal task hierarchy."}, {"src": "/screenshots/hymio-material-tasks.png", "label": "iOS · Tasks", "caption": "Current task list: temporal grouping without a duplicate page-level alert."}]' />
 
 ## Real cases to start with
 
 - [Cross-device continuity](./ios): request a packing list on iPhone, refine it on Web and receive the result back on the phone.
 - [Models & attachments](./media): synchronize a preference, upload a travel note and read its actual summary on iPhone.
-- [Tasks & scheduling](./tasks): create a task in native iOS and inspect its actual completed result.
+- [Tasks & multi-Agent work](./tasks): inspect temporal scope, execution mode, collaboration and cancellation.
 - [A2UI](./ui): interact with a model-generated native card and inspect the ordinary message its button sends.
 - [Devices](./devices) and [the console](./admin): distinguish online clients, permission grants and allocation using an actual persisted grant.
 
@@ -53,7 +53,9 @@ You send a request through a client. Hymio checks identity and permissions, then
 
 ## Product boundaries
 
-Hymio owns identity, authorization, task state, uploads and device allocation. Oath owns agent execution and event delivery. Nostalgia is a separate personal-context design project and is not integrated yet.
+Hymio owns identity, product authorization, uploads, device allocation and the task presentation
+projection. Oath owns durable Task/Run lifecycle, Agent execution and event delivery. Nostalgia is a
+separate personal-context design project and is not integrated yet.
 
 Web and Tauri share a React frontend. iOS is a native SwiftUI client using the same backend and event contracts. The operator console is a separate application at `/admin/`. Chrome extension structure exists; it does not currently match the main clients' capabilities.
 

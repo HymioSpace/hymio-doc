@@ -4,7 +4,7 @@ Oath is a harness for personal agents: a server-side execution framework that ma
 
 Here, runtime means a server program that manages execution state and scheduling. It is not a browser or frontend runtime.
 
-It fits applications that need long-running work, asynchronous tool results, or access from multiple clients. Oath does not provide product accounts, chat UI, or the task business state owned by an application.
+It fits applications that need long-running work, asynchronous tool results, or access from multiple clients. Oath owns durable Task/Run lifecycle, execution and Agent collaboration. It does not provide product accounts, chat UI or authorization owned by an application.
 
 ## See the runtime first
 
@@ -71,7 +71,7 @@ Oath advanced model and tool execution while Hymio stored and displayed Task / R
 | Connect your client | [WebSocket & HTTP](./protocol) |
 | Add tools, CLI commands, or skills | [Extensions](./extensions) |
 | Configure prompts, models, and auth | [Runtime configuration](./configuration) |
-| Create bounded subagents | [Subagents & application events](./delegation) |
+| Understand tasks and Agent collaboration | [Multi-agent tasks & collaboration](./delegation) |
 
 ## Build in this order
 

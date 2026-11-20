@@ -37,10 +37,21 @@
 
 切到其他应用或关闭网页，不会取消服务端已经接纳的工作。iOS 回到前台时会恢复凭据、读取本机缓存并补齐事件，各个客户端分别记录自己已经收到的位置。
 
-**待发送和已接纳要区分。** 尚未送达的消息要等连接恢复；已经接纳的工作由服务端推进。这个过程不代表 iPhone 在后台持续运行 Agent，也不代表已经支持推送通知。
+**待发送和已接纳要区分。** 尚未送达的消息要等连接恢复；已经接纳的工作由服务端推进。APNs 推送和一条
+聚合 Live Activity 可以在工作开始、需要关注或完成时提醒用户，但这仍不代表 Agent 持续在 iPhone 后台运行。
 
 ## 使用前确认
 
-iPhone 和 Web 应连接同一套 Hymio 部署，并登录同一账号。连接到不同后端、不同账号，内容不会自动合并。当前原生端支持账号密码登录，浏览器 OIDC 登录、语音输入、推送和原生手机控制仍待实现。
+iPhone 和 Web 应连接同一套 Hymio 部署，并登录同一账号。连接到不同后端、不同账号，内容不会自动合并。
+原生端支持账号密码登录；部署配置 APNs 后可使用推送。浏览器 OIDC 登录、语音输入和完整原生手机控制
+仍待实现。
+
+## Material 3 外壳
+
+原生 App 现在使用 Material 3 color roles、tonal surface、紧凑卡片层级和标准底部导航栏。
+Hymio 暂以 SF Pro 与 SF Symbols 作为 Roboto 与 Material Symbols 的平台原生例外；导航几何、
+selected indicator、间距和状态行为遵循 Material 3。
+
+<DocGallery :images='[{"src": "/screenshots/hymio-material-home.png", "label": "Material 外壳", "caption": "移动端标准 Material 导航栏，选中项使用 tonal indicator。"}, {"src": "/screenshots/hymio-material-my.png", "label": "我的", "caption": "使用列表分组、浅色分组标题与 tonal surface，替代层层厚重卡片。"}]' />
 
 从[安装与启动](./getting-started)开始；已部署服务的局域网访问要求见[配置与部署](./configuration#局域网与-ios)。

@@ -93,3 +93,40 @@ A Button substitutes current input values in <code v-pre>{{input-id}}</code> pla
 Each block is limited to 64 KiB, 64 nodes, depth 12, and 2,000 characters per field. IDs use `[A-Za-z0-9_-]{1,64}`; reserved prototype-related IDs are rejected. Raw HTML, scripts, CSS and arbitrary networking are not supported. Cross-message surface updates and arbitrary chart/canvas components are not implemented.
 
 The model-facing catalog lives in [the Hymio UI Skill](https://github.com/HymioSpace/Hymio/blob/main/extensions/skills/hymio-ui/SKILL.md). It is loaded through the application's Skill directory.
+
+## Material 3 application shell
+
+Hymio UI and product navigation now share a Material Design 3 foundation. This is separate from the
+model-generated A2UI catalog: A2UI controls assistant content, while the application shell controls
+the product itself.
+
+### Tokens and surfaces
+
+- Hymio blue is the Material source color.
+- Primary/container and on-color roles are paired; raw hex values are not used inside components.
+- The app uses `surface`, `surface-container-low`, `surface-container`, and `surface-high` tiers.
+- Cards use tonal surfaces and outlines. Shadow is reserved for menus, dialogs and transient bars.
+- Chips and selected navigation indicators are fully rounded; ordinary cards use the medium shape.
+
+### Navigation
+
+- Compact iOS/Web uses a standard bottom navigation bar rather than a floating capsule.
+- Desktop Web uses a navigation rail.
+- Selected destinations get a tonal indicator and clear foreground color, not a shadow-heavy card.
+- The bottom bar stays edge-aligned and preserves the safe area.
+
+### Content hierarchy
+
+- Page-level explanation is kept short.
+- Exceptions appear inside the affected task or row.
+- Execution-mode descriptions open from a small help affordance.
+- Agent communication is written as `Sender → Recipient`.
+- Raw traces and tool JSON stay in developer/operator views.
+
+### Accessibility and states
+
+- Touch targets are at least 48pt on iOS and 48px on Web.
+- Keyboard focus uses a visible ring on Web.
+- Selected, pressed, disabled, loading, empty and error states must be distinguishable without color
+  alone.
+- Reduced motion and reduced transparency are respected.

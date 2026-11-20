@@ -1,58 +1,334 @@
-# Subagents & application events
+# Multi-agent tasks and collaboration
 
-A subagent performs a bounded assignment with its own context, journal, tools and execution lease. It belongs to the same user as its parent, while the parent can continue receiving input.
+Oath now runs durable work as a task system, not as one unbounded conversation with ad-hoc
+children. The central rule is simple:
 
-## Spawn and inspect
+> Every TaskRun has one TaskAgent, and every collaborating Subagent belongs to that TaskRun.
 
-Biz exposes authenticated action endpoints:
+This rule makes multi-agent work observable, recoverable and safe to control. A user can cancel one
+task without deleting the conversation, inspect which Agent is doing what, and understand whether
+work is still running or merely scheduled for later.
 
-| Endpoint | Input |
+## Executive summary
+
+Five decisions define the current model:
+
+1. **A Task records intent; a Run records execution.** “Follow my weight for six months” is a Task.
+   The report generated on Tuesday is one Run.
+2. **One TaskAgent owns each Run.** The interaction Agent creates work and returns to conversation;
+   the TaskAgent executes in an isolated context.
+3. **Every Subagent is bound.** There are no unbound background children. Temporary parallel work
+   first becomes a one-off Task.
+4. **Execution mode is independent from time.** A one-off research task and a recurring tracking
+   task can both use parallel Subagents, Agent Team or a Dynamic Workflow.
+5. **Primary UI shows collaboration; deeper UI shows evidence.** Users first see status, results,
+   the leader and teammates. Agent context, messages, execution records and tool calls are one level
+   deeper.
+
+## The two independent axes
+
+Multi-agent products often confuse schedule with execution architecture. Hymio keeps them separate.
+
+| Axis | Values | Answers |
+| --- | --- | --- |
+| Time | temporary, ongoing | Is this a bounded one-off task or continuing tracking/recurrence? |
+| Execution | program, parallel Subagents, Agent Team, Dynamic Workflow | How is this attempt carried out? |
+
+All combinations are valid:
+
+| Example | Time | Execution |
+| --- | --- | --- |
+| Send a fixed reminder at 20:00 | temporary or ongoing | program |
+| Research three vendors once | temporary | parallel Subagents |
+| Weekly competitive briefing | ongoing | Agent Team |
+| Build a report with dependent research stages | temporary | Dynamic Workflow |
+
+## Four execution modes
+
+### 1. Program execution
+
+Use `program` for deterministic work that does not need model reasoning: a fixed reminder,
+notification, or application action with stable parameters. Oath starts no TaskAgent and no
+Subagent. Delivery receipt is separate from task completion.
+
+### 2. Parallel Subagents
+
+Use `parallel_subagents` when the leader can divide independent work, run bounded children, then
+integrate the results. Each child has its own context, journal, step budget, deadline and terminal
+result. Children return findings to the TaskAgent; they cannot delegate again.
+
+Best for:
+
+- comparing independent sources;
+- collecting several bounded datasets;
+- separate checks whose results the leader can merge.
+
+### 3. Agent Team
+
+Use `agent_team` when members need to communicate while the work is still in progress. The TaskAgent
+acts as leader. Teammates can send durable peer messages, reply to the leader, and read messages in
+which they are sender or recipient.
+
+Team communication is not a transient WebSocket message. Each record stores:
+
+- Task and Run;
+- sender Agent ID and title;
+- recipient Agent ID and title;
+- content and timestamp;
+- a stable message ID for idempotency.
+
+The task-level collaboration view should read **sender → recipient**. A deeper Agent view shows the
+full message and the messages relevant to that member.
+
+<DocFigure
+  variant="phone"
+  src="/screenshots/hymio-material-agent-communication.png"
+  caption="Agent detail makes communication directional: sender name → recipient name, followed by the durable message."
+/>
+
+### 4. Dynamic Workflow
+
+Use `dynamic_workflow` when the TaskAgent must first decide dependencies between bounded nodes.
+`workflow_define` persists a DAG. Each node is a bound Subagent. The scheduler:
+
+1. starts root nodes;
+2. marks a node ready only after every dependency succeeds;
+3. propagates failure to dependent nodes;
+4. enforces the active-Agent limit;
+5. wakes the TaskAgent only after the final join.
+
+The leader receives the node results when it is woken for integration. It must not declare the Task
+complete while any workflow node is unfinished.
+
+## Task, Run and Agent hierarchy
+
+| Level | Owner | Responsibility |
+| --- | --- | --- |
+| Task | Oath task database | Durable intent, acceptance, plan, trigger, policy, budget and memory |
+| TaskRun | Oath task database | One execution attempt, status, checkpoint, result, usage and control epoch |
+| TaskAgent | Dedicated delegated Agent | Executes the Run and owns integration/verification |
+| Team member | Subagent bound to the same Run | Executes a bounded responsibility and communicates within that Run |
+| Workflow node | Persistent graph node plus bound Subagent | Waits for dependencies, executes and returns one bounded result |
+| Interaction Agent | Main conversation | Creates and controls Tasks, stays responsive to the user |
+
+The interaction Agent cannot create an unbound Subagent. Temporary parallel work and long-running
+work both become Tasks first.
+
+## Execution flow
+
+1. The interaction Agent accepts a user goal.
+2. It creates a Task with trigger, executor, acceptance, context, plan and budget.
+3. The task scheduler creates a queued TaskRun.
+4. Oath creates and binds a TaskAgent to that Run.
+5. The TaskAgent either:
+   - works directly;
+   - creates parallel Subagents;
+   - creates teammates and exchanges durable messages;
+   - defines a Dynamic Workflow DAG;
+   - reports a concrete wait or blocker.
+6. Child results return through durable queues.
+7. The TaskAgent integrates the result and reports completion.
+8. Hymio displays task state and result; notification delivery remains a separate concern.
+
+## State machines
+
+### Task
+
+| State | Meaning |
 | --- | --- |
-| `POST /subagents/spawn` | `request_id`, `title`, `objective`, `success_criteria`; optional `model`, `max_steps`, `timeout_seconds` |
-| `POST /subagents/get` | `agent_id` or original `request_id` |
-| `POST /subagents/list` | Owner-scoped recent executions |
-| `POST /subagents/cancel` | Child identity |
+| `active` | Accepted and may create future Runs |
+| `paused` | No new execution should start |
+| `closed` | Terminal; `close_reason` is `achieved`, `cancelled` or `expired` |
 
-Example spawn body:
+### Run
 
-```json
-{
-  "request_id": "research-example-1",
-  "title": "Compare document converters",
-  "objective": "Compare supported input formats and deployment requirements",
-  "success_criteria": "Return a concise table with source references",
-  "max_steps": 20,
-  "timeout_seconds": 600
-}
-```
+| State | Meaning |
+| --- | --- |
+| `queued` | Ready to acquire execution |
+| `running` | TaskAgent is active |
+| `waiting` | Waiting for a declared condition such as children, time, event, user or tool |
+| `paused` | Stopped with resumable checkpoint or attention required |
+| `succeeded` | Current Run produced an accepted result |
+| `failed` | Current Run terminated without success |
+| `cancelled` | Run and owned execution were stopped |
 
-Reuse the same `request_id` after a lost response; do not create a new child merely because transport timed out. Ownership comes from authentication. `agent_id` selects a delegated execution and is not another account identity.
+### Workflow node
 
-## Execution constraints
+`pending → running → succeeded`, with terminal failure branches `failed`, `cancelled` and `blocked`.
+A dependent node becomes `blocked` when an upstream dependency does not succeed.
 
-- No recursive delegation or task-management tools in children.
-- Independent context; the parent's conversation is not copied.
-- After initial admission, only tool results wake the child. It does not bind to user/system queues.
-- Ambiguity or required approval becomes a blocker, not an indefinite wait for a user.
-- A final tool-free response terminates only after earlier outstanding results are consumed.
-- Cancellation prevents later Brain commits and queued tools; already-running external effects may still finish.
+### Subagent
 
-Defaults are 40 steps and 15 minutes; the maximum is 100 steps / one hour. A user can have at most eight running children. Findings are bounded to 100 notes of 4,000 characters; final text to 16,000 characters.
+Members can be `waiting`, `running`, `succeeded`, `failed`, `cancelled` or temporarily `paused`.
+When the owning Run pauses, its TaskAgent and running children must stop advertising themselves as
+running.
 
-## Progress and completion
+## Cancellation and pause are not completion
 
-`subagent_notify` sends an intermediate `subagent.progress` event to the parent's system path. Terminal state produces `subagent.completed`. The terminal state and parent notification commit together; reconnecting is not required to keep the event.
+Cancellation is a terminal user action. It must:
 
-The child exposes status to clients through `subagent.status`. Application code can reconcile a main-agent continuation through `POST /executions/get` using its tool invocation ID; a successful tool alone does not establish a finished continuation.
+- close the Task as `cancelled`;
+- mark the open Run `cancelled`;
+- stop future triggers;
+- stop or cancel bound members;
+- prevent stale messages from resuming the work;
+- remove the task from the current task list.
 
-## Application events
+A cancelled task is **not completed**. “Completed” means successful outcome, not “the row has
+stopped moving”. If a product needs an archive, cancellation belongs in a separate archive/history
+surface, not inside the success group.
 
-Applications submit semantic input through authenticated `POST /events`:
+Pause is different. It preserves the ability to resume and must leave a truthful checkpoint. Budget
+exhaustion and no-progress detection normally pause for attention rather than pretending success.
 
-```json
-{"event_id":"example-due-1","type":"app.example.due","payload":{"item_id":"example-item"}}
-```
+## Failure and recovery
 
-Types must be under `app.*`. The endpoint does not accept runtime control commands. Oath uses the credential's owner, and a stable `event_id` supports idempotent delivery. Hymio schedules tasks through this mechanism; task business state remains in Hymio.
+| Failure | Required behavior |
+| --- | --- |
+| Budget exhausted | Persist partial checkpoint, pause owner, stop or pause children, request attention |
+| No progress | Pause only when no active external tool remains |
+| Child fails | Parent can inspect the failure; Dynamic Workflow blocks dependent nodes |
+| Agent ends without report | Pause with `REPORT_REQUIRED`; never infer completion from process exit |
+| Stale run finishes | Lease/control fencing prevents it from overwriting newer state |
+| User cancels | New events and stale timers cannot revive the cancelled Run |
+| Service restart | Supervisor reconciles durable Runs, queues and terminal Agent rows |
 
-Source: [bounded delegation contract](https://github.com/HymioSpace/Oath/blob/main/spec/feature-subagents.md).
+Recovery is based on durable facts. Restarting a process is not evidence that an external side
+effect did or did not happen; uncertain effects require reconciliation.
+
+## Communication and context model
+
+### What is shared
+
+- Task goal, acceptance criteria and policy;
+- explicit context references supplied by the interaction Agent;
+- durable Team messages;
+- child findings and final result;
+- workflow node outcomes;
+- Task memory between Runs.
+
+### What remains isolated
+
+- Each Agent's journal and model context;
+- each Agent's tool approvals and terminal records;
+- each TaskRun's spec snapshot and checkpoint;
+- per-Agent budgets and deadlines.
+
+The system should not copy the whole main conversation into every worker. Broad context increases
+cost and can leak unrelated personal information. The TaskAgent must provide enough task-specific
+material for each assignment.
+
+## User-visible layers
+
+### Primary task view
+
+Keep this small:
+
+- title and current state;
+- one temporal label;
+- one execution-mode label;
+- current user-visible result or blocker;
+- leader and bound members;
+- compact plan and workflow dependencies.
+
+### Agent detail
+
+Expose:
+
+- Agent responsibility and acceptance;
+- sender → recipient communication records;
+- intermediate and final results;
+- chronological execution history;
+- semantic tool-call descriptions.
+
+### Technical inspection
+
+Raw tool JSON, trace IDs, journals and event payloads belong in an operator/developer view, not the
+default consumer task screen.
+
+## Tool boundaries
+
+| Tool family | Available to |
+| --- | --- |
+| `task_create/list/get/update/message/pause/resume/cancel/retry` | Interaction Agent |
+| `task_report` | TaskAgent |
+| `subagent_spawn/list/get/cancel/continue` | TaskAgent only |
+| `subagent_notify` | Bound member |
+| `team_send/inbox/members` | TaskAgent or teammate in `agent_team` mode |
+| `workflow_define/status` | TaskAgent in `dynamic_workflow` mode |
+
+Registration, model-facing definitions, admission checks and Storage execution all enforce the same
+boundary. Hiding a tool from the prompt is not sufficient authorization.
+
+## API projection
+
+`task_get` with execution enabled returns:
+
+- executor kind and execution mode;
+- TaskAgent;
+- bound Subagents and delegation role;
+- recent activity with tool name and semantic description;
+- Team messages;
+- workflow nodes and edges;
+- plan, usage, checkpoint, wait and recent task events.
+
+The consumer task screen should not display the raw technical fields directly. It should translate
+them into a stable hierarchy and keep tool details one level deeper.
+
+## Limits and safety
+
+- Subagents are bounded by steps, time and terminal status.
+- A user has a finite number of active delegated Agents.
+- Workflow nodes are bounded and validated as a cycle-free DAG.
+- Team messages are Run-scoped and recipient-allowlisted.
+- Tool approvals remain per Agent; a child never inherits an unbounded approval.
+- Cancellation cannot undo an external action that already ran. It only prevents later work and
+  records the remaining uncertainty.
+
+## Future direction: from delegation to an Agent Team
+
+The current implementation establishes the necessary foundation: bound members, durable messages,
+DAG scheduling and observable contexts. The next layer should be developed in this order.
+
+### Phase 1: explicit team roster
+
+Define leader, teammate, responsibility, tools and communication allowlist before execution.
+Show the roster in the primary collaboration view.
+
+### Phase 2: shared team artifacts
+
+Add explicit shared findings and artifacts instead of broadcasting every message. Keep private
+Agent journals isolated while allowing selected evidence to become team-visible.
+
+### Phase 3: team communication graph
+
+Expose who can talk to whom and which message caused a change in plan. Detect deadlocks, repeated
+handoffs and members waiting for information that was never sent.
+
+### Phase 4: dynamic leadership and conflict resolution
+
+Allow a team to propose a new plan or rebalance work. The TaskAgent remains accountable unless the
+task policy explicitly permits leadership transfer. Conflicts must resolve through evidence and
+declared responsibility, not conversation volume.
+
+### Phase 5: deeper team observability
+
+Provide a first-level collaboration graph, a second-level Agent transcript and a third-level tool and
+trace view. The levels should share identities and ordering so users can move from “who is working
+with whom” to “what exactly happened” without losing context.
+
+## Design rules for consumer products
+
+- Show exceptions inside the affected task, not in a detached duplicate alert.
+- Treat cancellation as history, not success.
+- Use one label for execution mode; place its explanation behind a small help affordance.
+- Use `A → B` for communication direction; “from/to” without names is not enough.
+- Hide raw budget numbers in the primary list; show them in the task's run details.
+- Keep the main task page concise and place diagnostics one level deeper.
+
+## Related documents
+
+- [Hymio task experience](../hymio/tasks)
+- [Oath architecture](./architecture)
+- [Tool, Skill and CLI boundaries](./extensions)
+- [Oath task-system specification](https://github.com/HymioSpace/Oath/blob/main/spec/feature-task-system.md)

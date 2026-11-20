@@ -41,9 +41,26 @@ Clients share product identity and state, but each maintains its own event curso
 
 ## State ownership
 
-Backend uses its product SQLite database for account mappings, hashed credentials, tasks, attachments and device-operation records. Oath owns its separate execution database through Storage. Sharing a product identity does not require sharing database tables.
+Backend uses its product SQLite database for account mappings, hashed credentials, attachments and
+device-operation records. Oath owns Task, Run, Agent execution and its separate Storage database.
+Hymio reads and controls tasks through the authenticated Oath bridge; it does not maintain a second
+task scheduler or a second task business state.
 
 User tokens are checked at the Backend boundary. Service-authenticated internal routes receive authoritative user context from trusted callers. CLI and tool adapters do not implement their own account or quota database.
+
+## Task projection
+
+The task UI is a product projection, not the owner:
+
+- Oath validates and executes Task/Run state;
+- Backend maps the Oath response into stable mobile/Web fields;
+- pause, resume and cancel are forwarded to Oath;
+- result notifications are delivered by Hymio after a delivery request;
+- cancelled Tasks are omitted from the current list and never mapped into the successful group.
+
+The UI separates temporal scope from execution mode, shows exceptions inside the affected card, and
+keeps Agent context, Team messages and tool calls one level deeper. See [Tasks and multi-Agent
+work](./tasks).
 
 ## Implement an application capability
 
