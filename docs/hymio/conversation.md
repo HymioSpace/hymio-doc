@@ -84,3 +84,8 @@ requests expose their message count and readable context, while responses show t
 This remains a technical view: local synchronized events are not the complete server journal. A
 task's status and a tool's terminal result are separate too; a successful tool can still be followed
 by a failed agent continuation.
+
+Expanding an LLM request first lists messages by `system / user / assistant / tool`. Each message
+shows a two-line preview and reveals its body only on demand. Raw attributes and oversized JSON live
+in a separate height-bounded disclosure, so one request cannot turn into a blank full screen.
+Escaped line breaks and Markdown are decoded before visible rendering.

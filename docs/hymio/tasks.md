@@ -145,6 +145,10 @@ The sending Agent and receiving Agent are always named. Selecting a member opens
 - chronological execution records;
 - semantic tool calls.
 
+Tool records and body text share one left-aligned baseline. Running and terminal records for the same
+semantic call are merged rather than shown as duplicates. Escaped line breaks are decoded before
+Markdown rendering while fenced code remains intact.
+
 Tool calls are collapsed by default. “Run command”, “browser” or raw implementation names are not
 used as the main explanation when the Agent supplied a semantic description.
 

@@ -37,6 +37,8 @@ It does not mean every deployment has enabled the feature.
 - Trace lists use the first input body as a readable title, show local wall-clock and elapsed time,
   and keep bounded LLM request/response content in the default detail. The raw trace ID is disclosed
   separately instead of becoming the primary label.
+- Trace requests render messages structurally; oversized raw JSON has its own height-bounded
+  disclosure. Escaped Agent text, Markdown and tool records render with stable left alignment.
 - Task execution records include local timestamps. A personal Mac supports up to four concurrent
   Shell commands while browser/desktop actions remain exclusive.
 - Memory view with original footprints and published understanding, explicit loading/error/empty
