@@ -2,9 +2,13 @@
 
 English-first user guides and developer documentation, organized into three sections:
 
-- **Hymio:** installation, clients, conversation, tasks, media, devices, configuration, product API and Hymio UI.
-- **Oath:** runtime installation, architecture, WebSocket/HTTP, extensions, authentication, model configuration and subagents.
-- **Nostalgia:** scope and draft Context contracts. No service implementation yet.
+- **Hymio:** installation, clients, conversation, durable tasks, memory UI, connectors, media, devices, configuration, product API and Material 3 UI.
+- **Oath:** runtime installation, event-driven execution, WebSocket/HTTP, extensions, authentication, task ownership and multi-Agent collaboration.
+- **Nostalgia:** implemented personal-context service, versioned publication, dreaming, bounded graph retrieval, HTTP contracts and operations.
+
+The current implementation and deployment boundaries are summarized on the bilingual
+[status page](https://hymiospace.github.io/hymio-doc/status) /
+[进度页](https://hymiospace.github.io/hymio-doc/zh/status).
 
 ## Preview
 
@@ -28,7 +32,8 @@ npm run preview
 Pages live under `docs/{hymio,oath,nostalgia}/`, with the same paths under `docs/zh/`.
 Navigation lives in `docs/.vitepress/config.mts`, shared styling and interactive components in
 `docs/.vitepress/theme/`. Check the owning project's source before changing technical claims.
-Keep draft contracts explicitly marked. Examples and screenshots must use synthetic data.
+Mark deployment-dependent or unimplemented behavior explicitly. Examples and screenshots must use
+synthetic data.
 
 `ASSETS.md` records image provenance. Hosting and brand exploration notes belong in
 `maintainers/`, outside the built site and search index.

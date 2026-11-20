@@ -3,7 +3,8 @@
 Oath now runs durable work as a task system, not as one unbounded conversation with ad-hoc
 children. The central rule is simple:
 
-> Every TaskRun has one TaskAgent, and every collaborating Subagent belongs to that TaskRun.
+> Every Agent-backed TaskRun has one TaskAgent, and every collaborating Subagent belongs to that
+> TaskRun. A deterministic `program` Run has no TaskAgent.
 
 This rule makes multi-agent work observable, recoverable and safe to control. A user can cancel one
 task without deleting the conversation, inspect which Agent is doing what, and understand whether
@@ -15,8 +16,9 @@ Five decisions define the current model:
 
 1. **A Task records intent; a Run records execution.** “Follow my weight for six months” is a Task.
    The report generated on Tuesday is one Run.
-2. **One TaskAgent owns each Run.** The interaction Agent creates work and returns to conversation;
-   the TaskAgent executes in an isolated context.
+2. **One TaskAgent owns each Agent-backed Run.** The interaction Agent creates work and returns to
+   the conversation; the TaskAgent executes in an isolated context. Program runs execute a fixed
+   action without an Agent.
 3. **Every Subagent is bound.** There are no unbound background children. Temporary parallel work
    first becomes a one-off Task.
 4. **Execution mode is independent from time.** A one-off research task and a recurring tracking
@@ -72,10 +74,11 @@ which they are sender or recipient.
 Team communication is not a transient WebSocket message. Each record stores:
 
 - Task and Run;
-- sender Agent ID and title;
-- recipient Agent ID and title;
+- sender and recipient Agent IDs;
 - content and timestamp;
 - a stable message ID for idempotency.
+
+The inspection API joins those IDs to current Agent titles before displaying the message.
 
 The task-level collaboration view should read **sender → recipient**. A deeper Agent view shows the
 full message and the messages relevant to that member.
@@ -106,7 +109,7 @@ complete while any workflow node is unfinished.
 | --- | --- | --- |
 | Task | Oath task database | Durable intent, acceptance, plan, trigger, policy, budget and memory |
 | TaskRun | Oath task database | One execution attempt, status, checkpoint, result, usage and control epoch |
-| TaskAgent | Dedicated delegated Agent | Executes the Run and owns integration/verification |
+| TaskAgent | Dedicated delegated Agent for Agent-backed Runs | Executes the Run and owns integration/verification |
 | Team member | Subagent bound to the same Run | Executes a bounded responsibility and communicates within that Run |
 | Workflow node | Persistent graph node plus bound Subagent | Waits for dependencies, executes and returns one bounded result |
 | Interaction Agent | Main conversation | Creates and controls Tasks, stays responsive to the user |
@@ -119,8 +122,9 @@ work both become Tasks first.
 1. The interaction Agent accepts a user goal.
 2. It creates a Task with trigger, executor, acceptance, context, plan and budget.
 3. The task scheduler creates a queued TaskRun.
-4. Oath creates and binds a TaskAgent to that Run.
-5. The TaskAgent either:
+4. A program Run executes its deterministic action. An Agent-backed Run creates and binds a
+   TaskAgent.
+5. For an Agent-backed Run, the TaskAgent either:
    - works directly;
    - creates parallel Subagents;
    - creates teammates and exchanges durable messages;
@@ -129,6 +133,9 @@ work both become Tasks first.
 6. Child results return through durable queues.
 7. The TaskAgent integrates the result and reports completion.
 8. Hymio displays task state and result; notification delivery remains a separate concern.
+
+Supervisor can wake or reconcile either kind of Run from durable state. It is not a second reasoning
+model and does not decide that a research result satisfies the user's goal.
 
 ## State machines
 
@@ -145,7 +152,7 @@ work both become Tasks first.
 | State | Meaning |
 | --- | --- |
 | `queued` | Ready to acquire execution |
-| `running` | TaskAgent is active |
+| `running` | The program action or TaskAgent is active |
 | `waiting` | Waiting for a declared condition such as children, time, event, user or tool |
 | `paused` | Stopped with resumable checkpoint or attention required |
 | `succeeded` | Current Run produced an accepted result |
@@ -161,7 +168,7 @@ A dependent node becomes `blocked` when an upstream dependency does not succeed.
 
 Members can be `waiting`, `running`, `succeeded`, `failed`, `cancelled` or temporarily `paused`.
 When the owning Run pauses, its TaskAgent and running children must stop advertising themselves as
-running.
+running. Program Runs have no member rows.
 
 ## Cancellation and pause are not completion
 
@@ -285,10 +292,11 @@ them into a stable hierarchy and keep tool details one level deeper.
 - Cancellation cannot undo an external action that already ran. It only prevents later work and
   records the remaining uncertainty.
 
-## Future direction: from delegation to an Agent Team
+## Next observability layers
 
-The current implementation establishes the necessary foundation: bound members, durable messages,
-DAG scheduling and observable contexts. The next layer should be developed in this order.
+The current implementation already has bound members, durable communication, DAG scheduling and
+per-Agent activity. The next work should deepen those layers rather than call the existing modes
+“future”.
 
 ### Phase 1: explicit team roster
 

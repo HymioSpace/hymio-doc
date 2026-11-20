@@ -1,6 +1,15 @@
 # Operator console
 
-The console is a separate Web application for Hymio deployment administrators. It grants cloud-computer access, shows capacity and manages device lifecycle. Regular users chat in the main application.
+The console is a separate Web application for Hymio deployment administrators. It grants
+cloud-computer access, shows capacity and device lifecycle, exposes monitoring and supports
+owner-scoped Nostalgia investigation. Regular users chat in the main application.
+
+Its primary sections are:
+
+- **Cloud resources** for provider grants, allocations and lifecycle;
+- **Overview**, **Trace investigation**, **System Prompt**, **Tool execution**, **Logs** and
+  **Runbook** for operations;
+- **Nostalgia** for dreaming runtime, source/derived data, prompt version and opportunities.
 
 ## Real case: grant one user cloud-computer access
 
@@ -38,6 +47,34 @@ pnpm --filter @hymio/admin dev
 ```
 
 Use the address printed in the startup log and its `/admin/` path. The development server proxies `/auth` and `/admin/api` to Backend. Starting only the frontend is insufficient for sign-in and management.
+
+## Monitoring and diagnosis
+
+The console reads private Backend/Prometheus/Oath interfaces server-side; administrator permission
+does not depend on a role flag supplied by the browser.
+
+- **Overview** summarizes request, latency, error, context and resource signals.
+- **Trace investigation** resolves one execution without exposing private upstream addresses.
+- **System Prompt** displays the effective application prompt and hash.
+- **Tool execution** shows success, latency and collection health without inventing missing results.
+- **Logs** provides bounded structured search. A zero-result query is not proof that a subsystem is
+  healthy.
+
+## Nostalgia
+
+The Nostalgia panel uses the configured per-user endpoint through Backend. It never returns that
+endpoint token to the browser.
+
+| View | What it answers |
+| --- | --- |
+| Runtime | Is dreaming enabled, when did recent cycles run, and what failed? |
+| Data | Which original records and published cards exist for this owner? |
+| Prompt | Which exact proposal instructions and hash are active? |
+| Discovery | Which evidence-backed opportunities are pending, delivered, accepted or dismissed? |
+
+Operators can append an explicit correction and accept/dismiss a suggestion. Correcting memory adds
+new source evidence; it does not overwrite the original or bypass dreaming. Accepting a suggestion
+deduplicates against existing active work and creates a Task through the task owner.
 
 ## First sign-in and access grant
 

@@ -6,6 +6,7 @@ import UiExample from "./components/UiExample.vue";
 import Home from "./components/Home.vue";
 import EventJourney from "./components/EventJourney.vue";
 import OathOverviewMap from "./components/OathOverviewMap.vue";
+import SystemArchitecture from "./components/SystemArchitecture.vue";
 import "./style.css";
 export default {
   extends: DefaultTheme,
@@ -17,5 +18,6 @@ export default {
     app.component("UiExample", UiExample);
     app.component("EventJourney", EventJourney);
     app.component("OathOverviewMap", OathOverviewMap);
+    app.component("SystemArchitecture", SystemArchitecture);
   },
 };

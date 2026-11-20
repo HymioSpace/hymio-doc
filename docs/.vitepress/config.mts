@@ -12,7 +12,7 @@ function config(zh = false) {
       [zh ? "多端互通" : "Cross-device continuity", "hymio/ios"],
       [zh ? "安装与启动" : "Install & start", "hymio/getting-started"],
       [zh ? "对话与客户端" : "Conversation & clients", "hymio/conversation"],
-      [zh ? "任务与调度" : "Tasks & scheduling", "hymio/tasks"],
+      [zh ? "任务、Agent 与日历" : "Tasks, agents & calendar", "hymio/tasks"],
       [zh ? "模型与附件" : "Models & attachments", "hymio/media"],
       [zh ? "云设备与管理" : "Devices & administration", "hymio/devices"],
       [zh ? "管理平台" : "Operator console", "hymio/admin"],
@@ -21,7 +21,7 @@ function config(zh = false) {
       [zh ? "架构与目录" : "Architecture & repository", "hymio/architecture"],
       [zh ? "配置与部署" : "Configuration & deployment", "hymio/configuration"],
       [zh ? "HTTP API" : "HTTP API", "hymio/api"],
-      [zh ? "A2UI：示例与协议" : "A2UI: examples & protocol", "hymio/ui"],
+      [zh ? "UI/UX 与 A2UI" : "UI/UX & A2UI", "hymio/ui"],
     ]),
   ];
   const oath = [
@@ -43,11 +43,10 @@ function config(zh = false) {
   ];
   const nostalgia = [
     section("Nostalgia", [
-      [zh ? "概览、术语与状态" : "Overview, terms & status", "nostalgia/"],
-      [
-        zh ? "Context 与接口草案" : "Context & draft contracts",
-        "nostalgia/contracts",
-      ],
+      [zh ? "概览与边界" : "Overview & boundaries", "nostalgia/"],
+      [zh ? "架构与发布" : "Architecture & publication", "nostalgia/architecture"],
+      [zh ? "HTTP 契约" : "HTTP contracts", "nostalgia/contracts"],
+      [zh ? "部署与运维" : "Deployment & operations", "nostalgia/operations"],
     ]),
   ];
   return {
@@ -59,6 +58,7 @@ function config(zh = false) {
         link: p + "nostalgia/",
         activeMatch: p + "nostalgia/",
       },
+      { text: zh ? "进度" : "Status", link: p + "status", activeMatch: p + "status" },
     ],
     sidebar: {
       [p + "hymio/"]: hymio,

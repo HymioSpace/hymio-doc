@@ -52,6 +52,10 @@ class PingTool(Tool):
 
 子 Agent 不应使用的能力设置 `allow_subagent = False`；注册表和接纳策略都会检查，模型伪造调用也无法绕过。
 
+每次工具调用还必须带模型生成的 `description`（1–160 字符）。Oath 把该字段加入可调用 schema，
+并在准入时校验，使 Hymio 能显示“比较酒店取消政策”这样的语义动作，而不是 `bash` 或原始参数。
+不能把该字段从模型 schema 隐藏。
+
 ## Skill 目录
 
 ```text

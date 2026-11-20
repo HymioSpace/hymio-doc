@@ -2,6 +2,9 @@
 
 Start work on iPhone and continue on your computer. Change a model on your phone and Web reads the same preference. Hymio keeps conversations, tasks and account settings in one backend, with interfaces suited to each device.
 
+The current iPhone shell has three primary destinations: **Today**, **Chat** and **My**. Tasks,
+memory, connections, devices and settings sit under My rather than expanding the bottom bar.
+
 ## Real case: start a packing list on iPhone, refine it on Web
 
 For a two-day trip, we used an isolated demonstration account in the native iOS application, then signed into Web with the same account.
@@ -28,10 +31,10 @@ See [Models & attachments](./media) for the complete model and input-material ca
 | --- | --- | --- |
 | Continuing conversation | Send messages, read streaming replies and history | Follow up in the same conversation |
 | Model preference | Choose a conversation model in your account | Read the same account choice |
-| Tasks | Arrange work, inspect progress and results | Manage the same task records |
+| Tasks | Open from My; inspect progress, results and optional calendar views | Manage the same task records in the Web task panel |
 | Attachments | Native photo-library and file inputs; camera when available | Files and conversation results belong to the same account |
 | Hymio UI | Native cards, choices and inputs | Web components interpret the same UI data |
-| Execution records | Inspect work records from your account | Inspect the same execution |
+| Execution records | Open the relevant task or diagnostics view | Inspect the same execution |
 
 ## After you leave the screen
 
@@ -51,10 +54,10 @@ future work.
 
 ## Material 3 shell
 
-The native app now uses Material 3 color roles, tonal surfaces, compact card hierarchy and a
-standard bottom navigation bar. Hymio keeps SF Pro and SF Symbols as platform-native exceptions to
-Roboto and Material Symbols; navigation geometry, selected indicators, spacing and state behavior
-follow Material 3.
+The native app uses a Material 3 convergence layer: color roles, tonal surfaces, compact card
+hierarchy and a standard three-destination navigation bar. Hymio keeps SF Pro and SF Symbols as
+platform-native exceptions; navigation geometry, selected indicators, spacing and state behavior
+follow the Material system.
 
 <DocGallery :images='[{"src": "/screenshots/hymio-material-home.png", "label": "Material shell", "caption": "Compact Material navigation bar with a tonal selected indicator."}, {"src": "/screenshots/hymio-material-my.png", "label": "My", "caption": "List-based grouping, muted section labels and tonal surfaces replace stacked heavy cards."}]' />
 

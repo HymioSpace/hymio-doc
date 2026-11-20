@@ -1,4 +1,50 @@
-# A2UI：Hymio UI 示例与协议
+# UI/UX 与 A2UI
+
+Hymio 有两层职责不同的 UI：
+
+- **产品外壳**负责此刻、对话、我的、任务、记忆和设置；
+- 受限的 **Hymio UI / A2UI** 目录负责在回复内部渲染模型生成卡片。
+
+两层共享视觉语言，但生成式助手 UI 不能替换或控制产品外壳。
+
+## 产品层级
+
+| 窗口 | 一级导航 |
+| --- | --- |
+| 紧凑 iOS | 此刻 / 对话 / 我的底部导航 |
+| 中等或宽屏 Web / Desktop | 带标签 navigation rail 与更宽内容区 |
+
+任务、记忆、连接、设置与设备不是额外的 iOS 一级 Tab，而是从“我的”进入；每个目标保留平台返回
+路径。详情采用渐进展示：先摘要，再 Agent 责任 / 结果，最后才是原始执行。
+
+页面先回答用户当前的问题。任务页先说明要处理什么、已经产出什么，不先展示调度器示意图；记忆
+卡片先展示理解或足迹，依据按需打开。
+
+## 对话几何
+
+滚动锚点来自真实可见的消息 / 详情内容：
+
+- 发送后不能在最新一行上方制造固定空白；
+- 键盘收起不能启动另一个竞争的滚动动画；
+- 展开工作详情时内容从所属行向下增长；
+- 用户主动离开底部后停止跟随，回到底部再恢复；
+- 完成态 Markdown 不能让现有可见 frame 突然塌缩或替换，导致视口跳动。
+
+只有正在流式到达的尾部文本变化。历史与未变化消息保持稳定 identity 和布局。工具调用的语义描述
+是主要文案，命令语法和 JSON 只在更深详情出现。
+
+## 加载、空态与失败
+
+每个列表分别定义三种状态：
+
+| 状态 | 必须怎样表现 |
+| --- | --- |
+| 加载中 | 只对尚未解决的区域显示进度，保留已有内容 |
+| 确认空态 | 说明这里会出现什么，只给最小相关动作 |
+| 读取失败 | 明确说读取失败并提供重试，绝不标记为“空” |
+
+理解为空时可以查看足迹或记一笔；Nostalgia 读取失败不能宣称账号没有记忆。任务未选中详情时显示
+紧凑说明，而不是空白 pane。
 
 Hymio UI v1 在助手 Markdown 中渲染受限组件树，Web 和 iOS 用各自的渲染器解释同一份数据。这是 Hymio 的有限协议，不代表兼容全部 A2UI 或 json-render 功能。
 
@@ -96,10 +142,10 @@ Button 点击后替换 <code v-pre>{{input-id}}</code> 中的当前输入值，�
 
 模型可读的目录位于 [Hymio UI Skill](https://github.com/HymioSpace/Hymio/blob/main/extensions/skills/hymio-ui/SKILL.md)，通过应用 Skill 目录加载。
 
-## Material 3 应用外壳
+## Material 3 收敛层
 
-Hymio A2UI 与产品导航现在共享 Material Design 3 基础。两者不是同一层：A2UI 控制模型生成的助手内容，
-Material 应用外壳控制 Hymio 产品本身。
+Hymio iOS 与 Web 在既有页面 CSS 迁移期间，使用 Material Design 3 收敛层。这是实现范围，不代表
+所有旧控件都已达到像素级 Material。
 
 ### Token 与表面
 
@@ -111,10 +157,11 @@ Material 应用外壳控制 Hymio 产品本身。
 
 ### 导航
 
-- iOS 与移动 Web 使用标准底部导航栏，不再使用悬浮胶囊；
+- 紧凑 iOS 使用三个目标的底部导航栏，不再使用悬浮胶囊；
 - 桌面 Web 使用 navigation rail；
 - 选中项使用 tonal indicator 与明确前景色，不靠厚重阴影；
 - 底部导航贴边并保留 safe area。
+- 任何一个主目标都不能单独抬高，与其余入口脱节。
 
 ### 内容层级
 
@@ -124,9 +171,13 @@ Material 应用外壳控制 Hymio 产品本身。
 - Agent 通信使用 `发送者 → 接收者`；
 - 原始 trace 与工具 JSON 留在开发者/运维层。
 
+iOS 继续使用 SF Pro / SF Symbols 是明确平台例外；布局、色彩角色、形状与交互状态遵循 Material
+系统。
+
 ### 可访问性与状态
 
-- iOS touch target 至少 48pt，Web 至少 48px；
+- 新的共享外壳控件以 iOS 48pt、Web 48px 为最低目标；尚未迁移的平台原生控件仍可能保留旧最小
+  尺寸，并纳入迁移 QA；
 - Web 键盘 focus 使用清晰 ring；
 - selected、pressed、disabled、loading、empty、error 不能只靠颜色区分；
 - 尊重 reduced motion 与 reduced transparency。

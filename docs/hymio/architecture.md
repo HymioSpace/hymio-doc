@@ -1,69 +1,139 @@
 # Application architecture
 
-Hymio is a modular application monorepo. Oath remains an independent runtime. Clients use product APIs and an authenticated gateway rather than owning runtime deployment.
+Hymio is a modular application monorepo with independent runtimes. Clients call authenticated
+product APIs. Hymio owns product state and policy, Oath owns task/Agent execution, and Nostalgia
+owns personal-context state.
 
-## Real case: one travel file appears across two clients
+## One request across the system
 
-The [attachment case](./media#real-case-supply-a-travel-note-as-an-attachment) uploaded `trip-notes.txt` from Web. Backend stored the account-owned attachment; a user message referenced it; Oath advanced the model and required tools; the reply appeared in Web and native iOS through the event path.
+<SystemArchitecture />
 
-The phone did not upload a second file or run a local parsing service. This reproducible case separates client input, product-file ownership, agent execution and presentation across devices.
+For a normal message:
 
-## Request path
+1. Web, Desktop or iOS attaches its product credential and stable client identity.
+2. Backend verifies the account, model/window choice and attachment ownership.
+3. Oath durably accepts input, claims a bounded step, builds the request and calls the model.
+4. Tool calls return through Hymio's authenticated product APIs; Oath still owns the tool lifecycle.
+5. Output becomes durable events. Each client saves and acknowledges its own cursor.
 
-<ProjectOverviewMap kind="hymio" />
-
-The public WebSocket entry is Backend's `/agent/ws`; Oath addresses are private upstream configuration. The same product user ID scopes tasks, attachments, devices and the continuing conversation.
+For personal-context work, Hymio asks Nostalgia for stable `_core` and `_index` content during the
+application-context build. The Agent can call `recall` for bounded search, graph expansion and exact
+evidence reads. Context is data and never grants tool authority.
 
 ## Client scope
 
-| Client | Status | Notes |
+| Client or agent | Status | Boundary |
 | --- | --- | --- |
-| Web / Desktop | Current | Shared React frontend using product APIs and `/agent/ws` through Backend |
-| iOS | Current | Native SwiftUI using the same backend and event contract |
-| Browser extension | Scaffold | Responsibility directory exists; page capture and full client capabilities are still in progress |
-| Apple Watch | Planned | Intended for quick input, notifications and task status |
-| Android | Planned | Will reuse the backend, authentication and event protocol |
+| Web / Desktop | Current | Shared React frontend, labelled rail, task inspector and A2UI renderer |
+| iOS | Current | Native SwiftUI, three primary destinations, native media/permissions and A2UI renderer |
+| HymioDevice macOS | Current | Outbound WSS, screen/desktop/browser and explicitly enabled local shell |
+| HymioDevice Android | Current execution adapter | Screen sharing, accessibility actions and no Bash |
+| Browser extension | Scaffold | No build manifest or page-capture product path yet |
+| Apple Watch | Not shipped | No client implementation in the current product |
+| Hymio Android app | Not shipped | The Android execution adapter is not a full Hymio conversation app |
 
-Clients share product identity and state, but each maintains its own event cursor. Closing a client does not cancel work already accepted by Oath.
+Clients share account, conversation, task and memory APIs, but each installation maintains its own
+event cursor. Closing a client does not revoke accepted server work.
 
 ## Repository map
 
 | Directory | Responsibility |
 | --- | --- |
-| `apps/client` | React Web / Tauri client |
-| `apps/ios` | Native SwiftUI client |
-| `apps/admin` | Independent operator console |
-| `packages/client`, `packages/protocol` | Client transport and shared contracts |
-| `packages/ui` | Shared visual tokens and Web components |
-| `backend/hymio_backend` | Authentication, tasks, media, devices, gateway |
-| `extensions/{skills,tools,cli}` | Application capabilities loaded by Oath |
-| `deploy` | Local and cloud composition |
+| `apps/client` | React Web and Tauri Desktop |
+| `apps/ios` | Native SwiftUI client and platform capabilities |
+| `apps/admin` | Operator console for resources, monitoring, tools and Nostalgia |
+| `apps/chrome` | Browser-extension responsibility scaffold |
+| `packages/client`, `packages/protocol` | Client transport, shared contracts and event handling |
+| `packages/ui`, `packages/a2ui` | Design tokens/components and the restricted Hymio UI renderer |
+| `backend/hymio_backend` | Identity, connectors, context proxy, media, tasks projection, devices and admin APIs |
+| `extensions/{skills,tools,cli}` | Hymio capabilities loaded through Oath |
+| `deploy` | Local and single-host cloud composition |
+
+The former `kits/` and `services/kit-host` implementation is not part of the current source tree.
 
 ## State ownership
 
-Backend uses its product SQLite database for account mappings, hashed credentials, attachments and
-device-operation records. Oath owns Task, Run, Agent execution and its separate Storage database.
-Hymio reads and controls tasks through the authenticated Oath bridge; it does not maintain a second
-task scheduler or a second task business state.
+| State | Owner |
+| --- | --- |
+| Accounts, sessions, connector revisions and encrypted provider credentials | Hymio Backend SQLite |
+| Attachments, generated media, notification delivery and device grants | Hymio Backend |
+| Original personal-context records, cards, relations, events and publication versions | Nostalgia |
+| Tasks, Runs, TaskAgents, checkpoints, tool state and Agent context | Oath |
+| Client delivery cursor | Each authenticated client installation |
 
-User tokens are checked at the Backend boundary. Service-authenticated internal routes receive authoritative user context from trusted callers. CLI and tool adapters do not implement their own account or quota database.
+Hymio does not maintain a second task business state or a second memory database. It proxies and
+projects the owning service's current state.
 
 ## Task projection
 
-The task UI is a product projection, not the owner:
+The public Hymio task API is deliberately narrow:
 
-- Oath validates and executes Task/Run state;
-- Backend maps the Oath response into stable mobile/Web fields;
-- pause, resume and cancel are forwarded to Oath;
-- result notifications are delivered by Hymio after a delivery request;
-- cancelled Tasks are omitted from the current list and never mapped into the successful group.
+- `GET /tasks` lists the authenticated user's tasks;
+- `POST /tasks` reads one task or forwards `pause`, `resume` and `cancel`;
+- creation and requirement edits remain Agent-managed through Oath tools.
 
-The UI separates temporal scope from execution mode, shows exceptions inside the affected card, and
-keeps Agent context, Team messages and tool calls one level deeper. See [Tasks and multi-Agent
-work](./tasks).
+Backend maps Oath Task/Run data into stable product fields. The UI displays temporal scope,
+execution mode, current blockers, bound Agents, Team messages and workflow dependencies. Cancelled
+Tasks are filtered from the active list and are never remapped into success.
 
-## Implement an application capability
+## Context path
 
-Keep validation and business state in a Backend service. Expose a bounded authenticated operation, then add a small Tool or CLI adapter and a Skill explaining when to use it. UI actions use the same authorization and business rules.
+```mermaid
+flowchart LR
+  Connector[Hymio connectors] -->|source revisions| Store[(Hymio connector store)]
+  Store -->|idempotent records| N[Nostalgia]
+  N -->|assembly and events| API[Hymio context proxy]
+  Oath[Oath application context] -->|private service token| API
+  Web[iOS / Web Memory] -->|authenticated API| API
+  N -->|dream input| Proposal[Backend proposal adapter]
+  Proposal -->|validated JSON only through Nostalgia| N
+```
 
-Nostalgia and Kits are not running dependencies of this installation. Their planned integration should use public contracts rather than copying core implementations into Hymio.
+Backend resolves a Nostalgia endpoint and token per user from private configuration. The browser,
+Oath and the model never receive those credentials. Oath receives bounded application context from
+Hymio; Nostalgia remains the authority for evidence reads.
+
+## Connectors
+
+Gmail, Dida, selected Apple calendars and daily Apple Health summaries are separate read-only
+sources. Their lifecycle is:
+
+1. explicit user consent and provider/OS authorization;
+2. bounded collection with encrypted credentials and a fenced per-connection lease;
+3. atomic local revision/checkpoint update;
+4. idempotent projection to Nostalgia with an expected previous record;
+5. visible sync receipts and independent retry.
+
+Remote text is untrusted evidence. A Gmail message or calendar event cannot authorize a tool or
+prove that Hymio changed an external system.
+
+## Execution devices
+
+Web and iPhone carry conversation. A personal Mac or Android device exposes native capabilities
+through an outbound WebSocket; a managed cloud desktop comes from a provider. The same explicit
+`device_id` scopes commands, screenshots and command status.
+
+- Bash selects an online personal Mac first, with a separately reported cloud fallback.
+- Browser and desktop work stay on the selected device.
+- A timeout or disconnect can leave an external effect unknown; commands are not blindly replayed.
+- Device pause/resume/revoke changes future execution; it cannot undo an action that already ran.
+
+## UI and rendering
+
+The product shell uses Material 3 color roles, tonal surfaces, shape hierarchy, navigation geometry
+and interaction-state conventions in the iOS/Web convergence layer. Platform-native typography and
+icons remain explicit platform choices.
+
+Generated assistant UI is a separate, restricted A2UI subset. It renders cards, text, metrics,
+choices, inputs and message-producing buttons. It cannot execute arbitrary HTML, scripts, network
+requests or concealed tool calls.
+
+## Extension boundary
+
+Keep product validation in Backend. Expose a bounded operation to the Agent through a Tool, CLI or
+Skill, and keep private credentials out of prompts and client bundles. Every tool call must carry a
+short semantic description for the exploration view; implementation syntax belongs in deeper debug
+or operator surfaces.
+
+See [Tasks, agents & calendar](./tasks), [HTTP API](./api), [UI/UX](./ui) and the
+[status page](../status).

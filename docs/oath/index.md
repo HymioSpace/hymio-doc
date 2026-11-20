@@ -60,7 +60,8 @@ These terms appear throughout the documentation. You do not need to memorize the
 
 In this run, we created `Weekend packing check` in native Hymio iOS. It first appeared as scheduled, then its detail showed an actual completed checklist and unresolved questions. The user did not have to stay on the chat screen; Web could inspect the same task.
 
-Oath advanced model and tool execution while Hymio stored and displayed Task / Run business state. A successful tool call alone is not task completion. See the captured [native task case](../hymio/tasks#real-case-create-a-departure-check-task-on-iphone).
+Oath stored and advanced the Task / Run while Hymio projected and displayed that state. A successful
+tool call alone is not task completion. See [Tasks and multi-Agent work](../hymio/tasks).
 
 ## Start here
 
