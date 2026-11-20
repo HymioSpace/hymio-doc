@@ -34,6 +34,11 @@ It does not mean every deployment has enabled the feature.
   downward expansion of working details without page-level blank ranges.
 - Tool activity uses the model-supplied semantic `description`; raw command syntax and generic
   transport labels are fallback/debug detail rather than primary user copy.
+- Trace lists use the first input body as a readable title, show local wall-clock and elapsed time,
+  and keep bounded LLM request/response content in the default detail. The raw trace ID is disclosed
+  separately instead of becoming the primary label.
+- Task execution records include local timestamps. A personal Mac supports up to four concurrent
+  Shell commands while browser/desktop actions remain exclusive.
 - Memory view with original footprints and published understanding, explicit loading/error/empty
   states, provider chips derived from existing records, evidence reading and user corrections.
 - Gmail, Dida, Apple Calendar and Apple Health connector foundations with read-only scopes,

@@ -77,4 +77,10 @@ For a real iPhone-to-Web walkthrough, see [Cross-device continuity](./ios).
 
 ## Inspect a problem
 
-Open the separate Trace page to inspect an execution. It is a technical view; local synchronized events are not the complete server journal. A task's status and a tool's terminal result are separate: a successful tool can still be followed by a failed agent continuation.
+Open the separate Trace page to inspect an execution. The list title comes from the first input
+body instead of a raw trace ID; the execution ID stays inside a disclosure in the detail. Events use
+their real order, showing both local wall-clock time and elapsed time from the trace start. LLM
+requests expose their message count and readable context, while responses show text or tool calls.
+This remains a technical view: local synchronized events are not the complete server journal. A
+task's status and a tool's terminal result are separate too; a successful tool can still be followed
+by a failed agent continuation.

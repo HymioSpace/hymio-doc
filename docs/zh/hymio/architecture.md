@@ -109,6 +109,7 @@ Provider 分配。同一显式 `device_id` 约束命令、截图与命令状态�
 
 - Bash 优先选择在线个人 Mac，并明确报告 cloud fallback。
 - Browser 与桌面操作保持在同一选定设备。
+- 个人 Mac 最多并行 4 条 Shell；浏览器 / 桌面动作独占，不能通过并行容量绕过锁。
 - 超时或断线可能留下未知副作用，不能盲目重放。
 - Pause / resume / revoke 影响后续执行，不能撤销已经发生的动作。
 

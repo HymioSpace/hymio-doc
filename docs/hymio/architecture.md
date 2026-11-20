@@ -117,6 +117,8 @@ through an outbound WebSocket; a managed cloud desktop comes from a provider. Th
 
 - Bash selects an online personal Mac first, with a separately reported cloud fallback.
 - Browser and desktop work stay on the selected device.
+- A personal Mac supports up to four parallel Shell commands; browser/desktop actions remain
+  exclusive and cannot bypass the lock through spare parallel capacity.
 - A timeout or disconnect can leave an external effect unknown; commands are not blindly replayed.
 - Device pause/resume/revoke changes future execution; it cannot undo an action that already ran.
 

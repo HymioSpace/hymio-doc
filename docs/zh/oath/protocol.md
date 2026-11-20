@@ -61,4 +61,12 @@ curl -H "Authorization: Bearer $OATH_USER_TOKEN" \
 
 `GET /query_trace?trace_id=...` 读取一条 Trace。`/cli_commands` 列举应用命令，`POST /cli/<name>` 按命令声明的 JSON 参数执行。Scoped CLI capability 不是通用用户凭据，不能查询 Trace。
 
+Trace 列表同时返回 `title`、`started_at`、step 数和耗时。`title` 取时间顺序上第一个
+`oath.input.*` 的正文，抽取为单行并在 72 个字符内截断；没有输入事件时回退到首个 user
+message，最后才显示“未命名执行记录”。客户端不需要把 32 位 `trace_id` 当成主标题。
+
+`query_trace?...&summary=1` 不再清空全部 event 正文。它保留有界的模型请求 / 响应与工具事件：
+请求包含消息总数和首尾消息，响应包含正文或工具调用，字符串和集合都有上限。完整 payload 仍只在
+用户主动读取原始属性时返回。这样“LLM 请求 0 条输入消息”“响应无正文”不会成为默认首屏。
+
 Hymio 客户端使用 Backend 返回的产品网关与代理地址，不直接填写私有上游。见[产品 API 索引](../hymio/api)。
