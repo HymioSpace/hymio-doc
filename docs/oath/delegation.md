@@ -187,7 +187,14 @@ model and does not decide that a research result satisfies the user's goal.
 
 ### Workflow node
 
-`pending → running → succeeded`, with terminal failure branches `failed`, `cancelled` and `blocked`.
+The normal path is `pending → running → succeeded`. `pending` means only that the start condition has
+not been satisfied. Once every dependency succeeds, the scheduler must release the node instead of
+leaving it labelled as waiting for dependencies.
+
+An already-started node becomes `paused` when its owning Run pauses. `paused` is neither `pending` nor
+failure: the UI says the execution is paused, and resuming continues the same node and bound Subagent
+without recreating the Run or discarding progress. Terminal states are `failed`, `blocked` and
+`cancelled`; cancellation moves every unfinished node to `cancelled`, including nodes that were paused.
 A dependent node becomes `blocked` when an upstream dependency does not succeed.
 
 ### Subagent

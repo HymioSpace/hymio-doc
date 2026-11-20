@@ -150,8 +150,14 @@ real dependencies; nodes in the same layer can run in parallel:
 
 - waiting for dependencies;
 - running;
+- paused execution;
 - completed;
 - failed or blocked.
+
+"Waiting for dependencies" is only the `pending` state, meaning that a start condition is not yet
+satisfied. A started node stopped by a budget or task pause becomes `paused`, not `pending`; resuming
+continues the same node and Agent. Cancelling the Task moves every unfinished node to `cancelled`, so
+an archived cancellation never continues to claim that it is waiting for dependencies.
 
 Selecting a node reveals its inputs, result, error and bound Agent activity. Dynamic Workflow does
 not show Agent-to-Agent communication because that concept belongs to Agent Team, not to a dependency

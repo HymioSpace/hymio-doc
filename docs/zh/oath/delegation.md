@@ -167,8 +167,13 @@ Supervisor 可以从持久状态唤醒或对账这两类 Run。它不是第二�
 
 ### Workflow 节点
 
-正常路径是 `pending → running → succeeded`，失败终态包括 `failed`、`cancelled` 和 `blocked`。
-上游依赖没有成功时，下游节点进入 `blocked`。
+正常路径是 `pending → running → succeeded`。`pending` 只表示尚未满足启动条件；上游依赖已经成功时，
+调度器必须继续释放节点，不能让它继续显示为“等待依赖”。
+
+已经开始执行的节点因所属 Run 暂停时进入 `paused`。`paused` 不是 `pending`，也不是失败：界面应明确
+显示“执行已暂停”，恢复时继续同一个节点和绑定 Subagent，不得重建 Run 或重置进度。失败终态包括
+`failed`、`blocked` 和 `cancelled`；Task 取消时，所有未成功节点都必须进入 `cancelled`，包括当时已经
+暂停的节点。上游依赖没有成功时，下游节点进入 `blocked`。
 
 ### Subagent
 
