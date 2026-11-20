@@ -63,6 +63,13 @@ Keychain/Keystore; Backend stores only a digest.
 | Personal Mac | Bash when explicitly enabled, browser and desktop control | Screen Recording and Accessibility permissions are local; Shell is off by default |
 | Personal Android | Screenshot, tap, swipe, text, back/home/recents | No Bash; unlocked device and screen-sharing consent required |
 
+A personal Mac may execute up to four independent Shell commands concurrently for bounded research,
+tests and read-only checks. Browser and desktop actions remain exclusive because they share one
+visible surface. A running Shell command may temporarily hand control to one browser/desktop action,
+but two desktop actions cannot overlap. The device dashboard reports the current parallel count. An
+existing `outcome_unknown` fence takes precedence over spare capacity and is never bypassed merely
+because no command is currently marked running.
+
 Pause and revoke stop future commands. They cannot undo a click, shell command or external side
 effect that already ran. A disconnected or timed-out uncertain command is not automatically
 replayed.

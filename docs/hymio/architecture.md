@@ -69,12 +69,14 @@ projects the owning service's current state.
 The public Hymio task API is deliberately narrow:
 
 - `GET /tasks` lists the authenticated user's tasks;
-- `POST /tasks` reads one task or forwards `pause`, `resume` and `cancel`;
+- `POST /tasks` reads one task, forwards `pause`, `resume` and `cancel`, or handles
+  `archive_list` and `archive_hide`;
 - creation and requirement edits remain Agent-managed through Oath tools.
 
 Backend maps Oath Task/Run data into stable product fields. The UI displays temporal scope,
-execution mode, current blockers, bound Agents, Team messages and workflow dependencies. Cancelled
-Tasks are filtered from the active list and are never remapped into success.
+execution mode, current blockers, bound Agents, Team messages and Workflow DAG edges. Closed Tasks
+leave the active list. Completed and cancelled records are returned separately through Archive and
+are never collapsed into the same success state.
 
 ## Context path
 
@@ -115,6 +117,8 @@ through an outbound WebSocket; a managed cloud desktop comes from a provider. Th
 
 - Bash selects an online personal Mac first, with a separately reported cloud fallback.
 - Browser and desktop work stay on the selected device.
+- A personal Mac supports up to four parallel Shell commands; browser/desktop actions remain
+  exclusive and cannot bypass the lock through spare parallel capacity.
 - A timeout or disconnect can leave an external effect unknown; commands are not blindly replayed.
 - Device pause/resume/revoke changes future execution; it cannot undo an action that already ran.
 

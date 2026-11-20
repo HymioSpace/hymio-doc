@@ -43,7 +43,8 @@ Switching apps or closing a browser does not cancel accepted server work. Return
 Distinguish pending messages from accepted work. Pending input waits for connectivity; accepted work
 advances on the server. Push notifications and one aggregate Live Activity can reconnect the user
 when work starts, needs attention or completes. This still does not run the Agent continuously on
-the phone.
+the phone. Completion and failure are terminal: the client stops the elapsed timer and ends the Live
+Activity immediately instead of leaving a completed activity visible.
 
 ## Before using it
 

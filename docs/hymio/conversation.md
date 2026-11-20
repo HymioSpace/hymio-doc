@@ -31,14 +31,16 @@ outside the completed work group.
 
 ### Anchoring and blank space
 
-The newest content is the scroll anchor; a fixed spacer or a page-level “bottom” sentinel is not.
-When a working-detail row expands, its content continues downward from the row and the message view
-keeps the last visible content in place. A completion layout change or keyboard frame does not start
-a competing scroll animation.
+The scroll target is a one-point invisible marker at the end of the transcript; it never creates a
+visible blank region. Content growth, keyboard changes and shell safe-area changes are corrected only
+after layout instead of storing a scroll offset that can become stale. Expanding working details
+pauses automatic following while the details grow downward from their row. Only a real user drag
+pauses following; system layout changes do not.
 
 The user can scroll away from the tail. New tokens then update the existing message without pulling
-the viewport back. Returning to the bottom resumes following. This prevents the iOS layout from
-producing a large blank region above the latest message or jumping when the keyboard closes.
+the viewport back. Returning to the bottom resumes following. While a local message is waiting for
+its first reply, that sent message must remain visible. iOS must not show an empty transcript or jump
+when the keyboard closes or working details grow.
 
 ## Connection and execution are independent
 
@@ -75,4 +77,15 @@ For a real iPhone-to-Web walkthrough, see [Cross-device continuity](./ios).
 
 ## Inspect a problem
 
-Open the separate Trace page to inspect an execution. It is a technical view; local synchronized events are not the complete server journal. A task's status and a tool's terminal result are separate: a successful tool can still be followed by a failed agent continuation.
+Open the separate Trace page to inspect an execution. The list title comes from the first input
+body instead of a raw trace ID; the execution ID stays inside a disclosure in the detail. Events use
+their real order, showing both local wall-clock time and elapsed time from the trace start. LLM
+requests expose their message count and readable context, while responses show text or tool calls.
+This remains a technical view: local synchronized events are not the complete server journal. A
+task's status and a tool's terminal result are separate too; a successful tool can still be followed
+by a failed agent continuation.
+
+Expanding an LLM request first lists messages by `system / user / assistant / tool`. Each message
+shows a two-line preview and reveals its body only on demand. Raw attributes and oversized JSON live
+in a separate height-bounded disclosure, so one request cannot turn into a blank full screen.
+Escaped line breaks and Markdown are decoded before visible rendering.

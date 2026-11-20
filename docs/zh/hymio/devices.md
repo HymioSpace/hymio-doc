@@ -58,6 +58,11 @@ Android 执行设备。设备凭据保存在 Keychain / Keystore，Backend 只�
 | 个人 Mac | 本机显式开启后的 Bash、浏览器与桌面控制 | Screen Recording / Accessibility 权限留在本机；Shell 默认关闭 |
 | 个人 Android | 截图、点击、滑动、文字输入、back/home/recents | 不暴露 Bash；需要解锁与屏幕共享同意 |
 
+个人 Mac 的 Shell 最多允许 4 条独立命令同时在本地执行，适合并行检索、测试和只读检查。
+Browser 与桌面操作仍共享一个可见桌面，因此保持独占；Shell 运行期间可以短暂交给一个
+Browser / 桌面动作，但不能同时出现两个桌面动作。设备面板会显示当前并行操作数量。已有的
+`outcome_unknown` 栅栏优先于并发容量：结果未知时不能因为“当前没有 running 命令”而绕过恢复。
+
 Pause / revoke 会阻止后续命令，不能撤销已经发生的点击、Shell 或外部副作用。断线或超时后的
 不确定命令不会自动重放。
 

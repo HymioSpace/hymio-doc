@@ -66,11 +66,13 @@ Hymio 不保留第二套任务业务状态，也不建第二套记忆数据库�
 Hymio 公共任务 API 有意保持有限：
 
 - `GET /tasks` 列出当前已认证用户的任务；
-- `POST /tasks` 读取一个任务，或转发 `pause`、`resume`、`cancel`；
+- `POST /tasks` 读取一个任务，转发 `pause`、`resume`、`cancel`，或处理 `archive_list`、
+  `archive_hide`；
 - 创建任务和修改要求仍由 Agent 通过 Oath 工具完成。
 
 Backend 把 Oath Task / Run 映射成稳定产品字段。界面展示时间范围、执行方式、当前阻塞、绑定 Agent、
-Team 消息和 Workflow 依赖。已取消 Task 会从活动列表过滤，绝不重新映射成成功。
+Team 消息和 Workflow DAG 边。已结束 Task 离开活动列表；已完成与已取消记录通过归档单独返回，
+不会被合并成同一种成功状态。
 
 ## Context 路径
 
@@ -107,6 +109,7 @@ Provider 分配。同一显式 `device_id` 约束命令、截图与命令状态�
 
 - Bash 优先选择在线个人 Mac，并明确报告 cloud fallback。
 - Browser 与桌面操作保持在同一选定设备。
+- 个人 Mac 最多并行 4 条 Shell；浏览器 / 桌面动作独占，不能通过并行容量绕过锁。
 - 超时或断线可能留下未知副作用，不能盲目重放。
 - Pause / resume / revoke 影响后续执行，不能撤销已经发生的动作。
 

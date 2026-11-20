@@ -19,18 +19,20 @@ The task workspace opens in **Task list**, not a calendar:
 
 - **Ongoing tasks**: recurring or tracking work that Supervisor may wake again;
 - **Temporary tasks**: work expected to finish and stop;
-- **Completed**: successful terminal work, kept separately;
 - exceptions inside the affected task card.
 
-Cancelled tasks are not shown as active work and are not counted as completed. A cancelled task has
-stopped; it has not succeeded.
+Completed and cancelled tasks leave the current list and remain in **Archive**. Archive preserves
+the difference between a successful outcome and a cancellation. Removing an item from Archive is a
+soft view operation: the Task and its execution records remain available to Oath.
 
 On iOS, switch from Task list to month, week or day when a time view is useful. Calendar blocks are
 derived from real task occurrences and recurring projections; an unscheduled task is not assigned a
 made-up date.
 
 There is no second page-level budget alert. If one task exhausted its budget, that state appears only
-on that task. Raw token counts belong in the task's run detail.
+on that task. The task tells the user to ask the Agent in conversation; the main Agent can call
+`task_adjust_budget` to continue the **same Run** from its checkpoint. There is no budget editor in
+the task UI. Raw token counts belong in the task's run detail.
 
 ## One outcome, two axes
 
@@ -54,7 +56,7 @@ one possible program action, not the definition of a task.
 | Automated | A fixed action is enough; no model is needed | “Sending” / receipt / completed |
 | Agent parallel | Independent work can be split and merged | Leader and bound helpers |
 | Agent Team | Helpers must coordinate while working | Leader, members and `A → B` messages |
-| Dynamic workflow | Steps have dependencies | Dependency list and node results |
+| Dynamic workflow | Steps have dependencies | A DAG with directed dependency edges and node results |
 
 The mode label is intentionally short. A small help button explains it only when requested.
 
@@ -69,6 +71,10 @@ The mode label is intentionally short. A small help button explains it only when
 
 Every Subagent belongs to a TaskRun. This is what lets the UI answer “who is working for which task?”
 and lets cancellation stop the relevant work.
+
+A Task has one coherent outcome. Every delegated Subagent or Workflow node must state its concrete
+deliverable, source inputs, in-scope work, exclusions/non-goals, observable acceptance criteria and
+the condition for stopping with a blocker. The TaskAgent keeps final integration and completion.
 
 ## Status language
 
@@ -123,12 +129,25 @@ Architecture research → Research leader
 Research leader → Framework comparison
 ```
 
+Responsibilities use a readable summary with full constraints available on demand. Completion
+criteria use body-level emphasis instead of low-contrast helper text. Execution records render
+Markdown headings, lists, tables and code instead of truncating the Markdown source. Responsibilities,
+completion criteria, collaboration, timeline and tools share one continuous surface separated by
+section rules rather than becoming a stack of nested cards. Every execution record also carries a
+wall-clock timestamp in the user's local timezone, so descriptions, step results and messages remain
+traceable in sequence. Internal workflow fields such as
+`Dependencies: []` and fixed injected boundary sentences never appear in the consumer task page.
+
 The sending Agent and receiving Agent are always named. Selecting a member opens:
 
 - responsibility and acceptance;
 - Team communication;
 - chronological execution records;
 - semantic tool calls.
+
+Tool records and body text share one left-aligned baseline. Running and terminal records for the same
+semantic call are merged rather than shown as duplicates. Escaped line breaks are decoded before
+Markdown rendering while fenced code remains intact.
 
 Tool calls are collapsed by default. “Run command”, “browser” or raw implementation names are not
 used as the main explanation when the Agent supplied a semantic description.
@@ -139,12 +158,29 @@ Agent or trace detail.
 
 ## Dynamic Workflow
 
-For Dynamic Workflow the task page shows the dependency graph as a readable list:
+For Dynamic Workflow the task page renders the dependency graph as a DAG. Directed edges connect
+real dependencies; nodes in the same layer can run in parallel:
 
 - waiting for dependencies;
 - running;
+- paused execution;
 - completed;
 - failed or blocked.
+
+"Waiting for dependencies" is only the `pending` state, meaning that a start condition is not yet
+satisfied. A started node stopped by a budget or task pause becomes `paused`, not `pending`; resuming
+continues the same node and Agent. Cancelling the Task moves every unfinished node to `cancelled`, so
+an archived cancellation never continues to claim that it is waiting for dependencies.
+
+Selecting a node reveals its inputs, result, error and bound Agent activity. Dynamic Workflow does
+not show Agent-to-Agent communication because that concept belongs to Agent Team, not to a dependency
+graph.
+
+The initial task plan is proposed by the interaction Agent when it creates the Task. The bound
+TaskAgent owns the runtime DAG and calls `workflow_define`; the interaction Agent cannot define nodes
+inside that Run. Until the first DAG definition arrives, the task page shows **Preparing workflow**
+instead of an empty section. DAG nodes live in Oath's `task_workflow_nodes` SQL table; their JSON
+dependency field is structured relational state, not a separate DAG file.
 
 The leader is not asked to integrate until all required nodes finish. A failed node blocks dependent
 nodes rather than allowing them to run on missing input.
@@ -165,19 +201,21 @@ Cancel is terminal:
 - future triggers stop;
 - bound members stop or are cancelled;
 - the card disappears from current tasks;
-- the record does not move into the successful “Completed” group.
+- the record enters Archive with `Cancelled`, never `Completed`.
 
 The conversation remains available. Cancel affects the task, not the account or chat history.
 
 ### Pause
 
 Pause preserves the Run and checkpoint for a later resume. If the task is paused because a budget or
-progress limit was reached, the relevant task explains that condition.
+progress limit was reached, the relevant task explains that condition. For `BUDGET_EXHAUSTED`, the
+user asks in conversation and the Agent raises the current Run budget only after confirmation.
 
 ### Remove from view
 
-Removing a cancelled task from the current list is a view concern. It does not imply that the task
-succeeded or that an external side effect was undone.
+Removing a completed or cancelled task from Archive is a view concern. The backend stores an
+owner-scoped hidden marker; it does not imply that the task succeeded, deletes its history or undoes
+an external side effect.
 
 ## Notifications
 
@@ -206,10 +244,11 @@ This avoids “task state says running, but executor says paused” disagreement
 Hymio exposes:
 
 - `GET /tasks`;
-- `POST /tasks` with `get`, `pause`, `resume` or `cancel`.
+- `POST /tasks` with `get`, `pause`, `resume`, `cancel`, `archive_list` or `archive_hide`.
 
 Task creation and requirement changes remain Agent-managed. The HTTP client cannot fabricate internal
-pending statuses or bypass Oath state validation.
+pending statuses or bypass Oath state validation. `task_adjust_budget` is intentionally an Agent tool,
+not a public task GUI or HTTP action.
 
 ## Design principles
 

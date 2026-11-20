@@ -61,4 +61,15 @@ curl -H "Authorization: Bearer $OATH_USER_TOKEN" \
 
 `GET /query_trace?trace_id=...` reads one trace. `/cli_commands` lists application commands; `POST /cli/<name>` executes one using its declared JSON arguments. A scoped CLI capability is not a general user credential and cannot query traces.
 
+Trace listings also return `title`, `started_at`, step count and duration. `title` comes from the
+first `oath.input.*` body in time order, flattened to one line and truncated to 72 characters. If no
+input event exists, it falls back to the first user message and finally to an unnamed execution, so a
+raw 32-character `trace_id` is never the primary client title.
+
+`query_trace?...&summary=1` keeps a bounded version of model request/response and tool event bodies.
+A request includes the total message count plus the first and latest messages; a response includes
+text or tool calls. Strings and collections remain bounded, while the full payload is still behind
+an explicit raw-properties action. The default view therefore no longer reports zero input messages
+or an empty model response when the trace contains those facts.
+
 Hymio clients use the product gateway and proxy addresses supplied by Backend rather than these private upstream addresses. See [the product API map](../hymio/api).

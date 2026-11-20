@@ -24,14 +24,23 @@ It does not mean every deployment has enabled the feature.
 - A Web rail for Today, Chat, Memory and Tasks, with responsive wide-screen task inspection.
 - A list-first task workspace. iOS starts with task groups and can switch to month, week or day
   calendar views; task status, time scope and execution mode are separate concepts.
-- Bound Subagents, durable Agent Team messages with visible sender → recipient direction, and
-  Dynamic Workflow dependency nodes.
-- Cancelled tasks leave the current list and are not presented as completed. Budget and other
-  exceptions stay inside the affected task.
+- Bound Subagents with explicit deliverables and exclusions, durable Agent Team messages with
+  visible sender → recipient direction, and Dynamic Workflow DAG edges.
+- Completed and cancelled tasks leave the current list for an Archive. Archive removal is
+  owner-scoped and soft; cancellation is never presented as completion.
+- Budget and other exceptions stay inside the affected task. With user authorization the main
+  Agent can enlarge the current Run budget and continue from its checkpoint without re-creating it.
 - Conversation anchoring based on actual visible content, keyboard dismissal after send, and
   downward expansion of working details without page-level blank ranges.
 - Tool activity uses the model-supplied semantic `description`; raw command syntax and generic
   transport labels are fallback/debug detail rather than primary user copy.
+- Trace lists use the first input body as a readable title, show local wall-clock and elapsed time,
+  and keep bounded LLM request/response content in the default detail. The raw trace ID is disclosed
+  separately instead of becoming the primary label.
+- Trace requests render messages structurally; oversized raw JSON has its own height-bounded
+  disclosure. Escaped Agent text, Markdown and tool records render with stable left alignment.
+- Task execution records include local timestamps. A personal Mac supports up to four concurrent
+  Shell commands while browser/desktop actions remain exclusive.
 - Memory view with original footprints and published understanding, explicit loading/error/empty
   states, provider chips derived from existing records, evidence reading and user corrections.
 - Gmail, Dida, Apple Calendar and Apple Health connector foundations with read-only scopes,
