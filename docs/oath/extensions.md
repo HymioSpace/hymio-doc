@@ -52,6 +52,11 @@ Tools are zero-argument constructed. A normal return is success. Tool execution 
 
 Set `allow_subagent = False` for capabilities children must not use. The registry and admission policy enforce that restriction even if a model invents a call.
 
+Every tool call also includes a model-supplied `description` of 1–160 characters. Oath injects this
+field into the callable schema and validates it at admission, so Hymio can show a semantic action
+such as “Compare hotel cancellation policies” instead of “bash” or raw arguments. Hiding the field
+from the model is not allowed.
+
 ## Skill layout
 
 ```text

@@ -10,18 +10,19 @@ const projects = computed(() => [
     n: "01",
     status: zh.value ? "可用" : "Available",
     kind: zh.value
-      ? "应用集成"
-      : "APPLICATION INTEGRATION",
+      ? "个人 Agent 应用"
+      : "PERSONAL AGENT APPLICATION",
     desc: zh.value
-      ? "Hymio 是面向用户的个人 Agent 应用，把对话、任务、模型和设备集成在一起，可从 iOS 开始，并在 Web 或 Desktop 继续。"
-      : "Hymio is a personal agent application that brings conversations, tasks, models and devices together, starting on iOS and continuing on Web or Desktop.",
+      ? "Hymio 把持续对话、可恢复任务、个人记忆、连接来源与设备执行组成一个产品；iOS、Web 与 Desktop 共用账号和业务状态。"
+      : "Hymio combines one continuing conversation, durable tasks, personal memory, connectors and execution devices. iOS, Web and Desktop share the same account and product state.",
     links: [
       [zh.value ? "概览" : "Overview", "hymio/"],
       [zh.value ? "安装与启动" : "Install & start", "hymio/getting-started"],
-      [zh.value ? "任务与调度" : "Tasks & scheduling", "hymio/tasks"],
-      [zh.value ? "云设备与管理" : "Devices & administration", "hymio/devices"],
+      [zh.value ? "任务、Agent 与日历" : "Tasks, agents & calendar", "hymio/tasks"],
+      [zh.value ? "个人记忆与 Context" : "Memory & context", "nostalgia/"],
+      [zh.value ? "设备与连接" : "Devices & connections", "hymio/devices"],
       [zh.value ? "HTTP API" : "HTTP API", "hymio/api"],
-      [zh.value ? "A2UI：示例与协议" : "A2UI: examples & protocol", "hymio/ui"],
+      [zh.value ? "UI/UX 与 A2UI" : "UI/UX & A2UI", "hymio/ui"],
     ],
   },
   {
@@ -44,7 +45,7 @@ const projects = computed(() => [
         "oath/extensions",
       ],
       [
-        zh.value ? "子 Agent 与应用事件" : "Subagents & events",
+        zh.value ? "多 Agent 任务与协作" : "Multi-agent tasks & collaboration",
         "oath/delegation",
       ],
     ],
@@ -52,19 +53,18 @@ const projects = computed(() => [
   {
     name: "Nostalgia",
     n: "03",
-    status: zh.value ? "草案" : "Draft",
+    status: zh.value ? "可用" : "Available",
     kind: zh.value
-      ? "Context 收集与管理 / 设计草案"
-      : "CONTEXT COLLECTION & MANAGEMENT / DRAFT",
+      ? "个人 Context 服务"
+      : "PERSONAL CONTEXT SERVICE",
     desc: zh.value
-      ? "Nostalgia 是设计中的 Context 收集与管理组件。Context（上下文）是供 Agent 参考的资料与背景；它通过应用连接器收集这些信息，记录来源与版本，方便后续检索。"
-      : "Nostalgia is a planned context collector and manager. Context means information and background an agent can refer to; application connectors supply it, while Nostalgia tracks sources and versions for later retrieval.",
+      ? "Nostalgia 保存原始资料和可追溯的整理结果，负责版本化发布、有界图检索、定时整理、回滚与任务机会提案；Hymio 负责采集并调用它。"
+      : "Nostalgia stores original material and attributable understanding, with versioned publication, bounded graph retrieval, scheduled dreaming, rollback and evidence-grounded opportunity proposals.",
     links: [
-      [zh.value ? "概览、术语与状态" : "Overview, terms & status", "nostalgia/"],
-      [
-        zh.value ? "Context 与接口草案" : "Context & draft contracts",
-        "nostalgia/contracts",
-      ],
+      [zh.value ? "概览与边界" : "Overview & boundaries", "nostalgia/"],
+      [zh.value ? "架构与发布" : "Architecture & publication", "nostalgia/architecture"],
+      [zh.value ? "HTTP 契约" : "HTTP contracts", "nostalgia/contracts"],
+      [zh.value ? "部署与运维" : "Deployment & operations", "nostalgia/operations"],
     ],
   },
 ]);
@@ -85,8 +85,8 @@ const projects = computed(() => [
         <p class="manual-description">
           {{
             zh
-              ? "从这里认识 Hymio 应用、让 Agent 持续运行的 Oath，以及为 Agent 整理上下文的 Nostalgia。"
-              : "Meet Hymio, the application; Oath, the framework that keeps agents running; and Nostalgia, the planned context component."
+              ? "从这里认识 Hymio 应用、让 Agent 持续运行的 Oath，以及保存来源、版本与个人理解的 Nostalgia。"
+              : "Meet Hymio, the application; Oath, the framework that keeps agents running; and Nostalgia, the service that keeps personal context attributable and useful."
           }}
         </p>
         <div class="manual-hero-actions">
@@ -113,8 +113,8 @@ const projects = computed(() => [
       <p class="eyebrow">{{ zh ? "三个项目，一起理解" : "THREE CONNECTED PROJECTS" }}</p>
       <h2 id="home-relationship-title">{{ zh ? "应用、执行与上下文" : "Application, execution and context" }}</h2>
       <p>{{ zh
-        ? "Hymio 把各项能力组合成可使用的应用，当前通过 Oath 运行 Agent；Nostalgia 计划为 Agent 提供可检索的个人上下文，尚未接入 Hymio。下面先认识每个项目，再进入对应文档。"
-        : "Hymio brings the capabilities together into an application and uses Oath to run agents. Nostalgia is planned to provide retrievable personal context and is not yet integrated with Hymio. Meet each project below, then follow its documentation." }}</p>
+        ? "Hymio 负责产品体验与采集，Oath 负责任务和 Agent 执行，Nostalgia 保存可追溯的个人 Context。三者通过 HTTP、工具和事件接入，而不是复制彼此的核心状态。"
+        : "Hymio owns the product experience and ingestion, Oath owns task and agent execution, and Nostalgia owns attributable personal context. They connect through HTTP, tools and events without duplicating each other's core state." }}</p>
     </section>
     <section
       class="manual-projects"
@@ -140,11 +140,6 @@ const projects = computed(() => [
             <a :href="link(path)">{{ title }} <span>↗</span></a>
           </li>
         </ul>
-        <small v-if="project.name === 'Nostalgia'" class="draft-note">{{
-          zh
-            ? "尚未实现服务；本文档描述设计草案。"
-            : "No service implementation yet. These pages describe draft contracts."
-        }}</small>
       </article>
     </section>
   </div>

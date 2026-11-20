@@ -31,6 +31,23 @@ oath start --system-prompt ./prompts/assistant.md
 
 角色、风格与能力指引保持静态；Oath 追加实际工作区和 Skill 索引，变化中的运行事实放进后续输入。重启后重新加载，已固定的请求保留原准备内容。
 
+## 应用 Context Provider
+
+应用可以配置一个有认证、有边界的 HTTP Context Provider：
+
+```sh
+oath start \
+  --context-provider http://backend:8080/internal/agent/context \
+  --context-provider-token-file /private/context-provider-token
+```
+
+Oath 发送已认证 owner、可选委派 `agent_id` 和客户端 channel。返回值在 compaction 预算计算前加入
+冻结模型请求的应用 Context 部分。Oath 不保存个人记忆 schema；Hymio / Nostalgia 负责 Context
+新鲜度、来源策略与检索。
+
+Provider 失败会明确表示为不可用，Oath 不静默编造过去事实。Context 文本只是数据，不能授予工具
+权限。私有 token 文件只挂载给真正需要它的 Worker 组件。
+
 ## 鉴权模式
 
 | 模式 | 身份来源 |
@@ -63,6 +80,8 @@ Verifier 接收带服务鉴权的 POST `{"credential":"USER_ACCESS_TOKEN"}`，�
 | `agent.builtin_bash` | 用设备工具替换宿主 Bash 时关闭 |
 | `agent.workspace_root` | 默认执行工作区 |
 | `agent.skill_index_tokens` | Skill 索引 Prompt 预算 |
+| `agent.context_provider_url` | 可选应用 Context endpoint |
+| `agent.permission_policy_url` | 私有工具授权 endpoint |
 | `services.workers` | 共享 Worker 池大小 |
 | `services.lease_seconds` | 执行归属租约 |
 | `supervisor.invoke_interval_seconds` | 待处理工作观察周期 |

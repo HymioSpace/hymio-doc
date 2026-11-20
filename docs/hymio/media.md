@@ -41,6 +41,24 @@ Authorization: Bearer USER_ACCESS_TOKEN
 
 Use `POST /settings/models` with `{"model":"MiniMax-M3"}` to change it. Backend's list must match deployed Oath choices. Endpoint and credential selection stay in server configuration.
 
+## Context window
+
+The same settings endpoint also returns and accepts `context_window`. The offered preferences are
+128K, 256K, 512K and 1M, with 256K as the default. `effective_context_window` is the smaller of the
+preference and the selected model's configured capacity.
+
+```json
+{
+  "model": "MiniMax-M3",
+  "context_window": 256000
+}
+```
+
+The preference is stored per user and sent with the next message. Oath independently validates and
+freezes it for that step. A 1M preference is not a promise that every model accepts 1M; the settings
+response reports the effective value. Compression changes the model-visible history without deleting
+the saved conversation or personal memory.
+
 ## Upload flow
 
 1. Upload bytes to authenticated `POST /attachments` with a URL-encoded `X-File-Name` header.

@@ -1,6 +1,7 @@
 # 安装与启动
 
-Hymio 支持自托管。本机启动器组合应用后端、Casdoor 身份服务与 Oath。可以先使用文字和附件，云电脑是可选能力。
+Hymio 支持自托管。本机启动器组合应用后端、Casdoor 身份服务与 Oath。可以先使用对话和附件；
+个人记忆与云电脑是可选服务 / 能力。
 
 ## 真实案例：从登录到手机收到第一条回复
 
@@ -34,9 +35,30 @@ hymio start --client web --timeout 900
 
 私下配置 Provider 凭据，并用产品用户 ID 指定管理员。管理员在独立平台中为已注册账号开通资源，详见[云设备与管理](./devices)。
 
+## 启用个人记忆
+
+统一启动器有意不内嵌 Nostalgia。请在私有网络中运行
+[Nostalgia 服务](../nostalgia/operations)，再通过 Backend 私有配置的
+`nostalgia_connections_file`，为已登录 Hymio 用户配置独立 endpoint 与 bearer token。不要把
+token 放进客户端或 prompt。
+
+Dreaming 的 proposal URL 指向 Hymio 私有 adapter，并以 token 文件认证。重启后分别验证三个状态：
+
+1. 新写的手记出现在足迹；
+2. 服务不可用时显示读取错误，而不是伪造空账号；
+3. 成功 dream 增加带依据的理解，同时不删除原文。
+
+完整 Provider 与备份约定见[Nostalgia 部署](../nostalgia/operations)。
+
 ## 在 iPhone 继续
 
 原生客户端连接 Hymio 后端，手机本身不运行 Oath 或云桌面。在手机上开始、电脑上继续的实际案例见[多端互通](./ios)。
+
+## 连接个人设备
+
+打开 **我的 → 我的设备 → 连接 Mac 或 Android**，在 HymioDevice 输入一次性配对码。设备主动
+建立出站连接，不需要家庭网络开放入站端口。屏幕、无障碍与通知权限保留在本机；Mac 的 Shell
+在用户明确开启前保持关闭。
 
 ## 部署到公网
 

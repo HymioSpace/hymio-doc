@@ -23,7 +23,11 @@ Additional `hymio-ios-*.png` and `hymio-web-*.png` screenshots were captured on 
 
 `hymio-admin-grant.png` shows the real admin frontend against an isolated local database with a synthetic target account. No cloud computer was provisioned. The screenshot is framed around resource totals and capacity, excluding account rows and identifiers.
 
-All 14 screenshots were visually reviewed and scanned with Apple Vision OCR for credential signatures, sensitive labels, full UUIDs, long hexadecimal identifiers and IPv4 addresses. The final scan returned no flagged regions. PNG text and EXIF metadata were removed without changing compressed pixel data. The source and built copies are byte-identical. OCR is a supporting check; inspect the full-size image before publishing future replacements.
+All published screenshots were visually reviewed and scanned with Apple Vision OCR for credential
+signatures, sensitive labels, full UUIDs, long hexadecimal identifiers and IPv4 addresses. The final
+scan returned no flagged regions. PNG text and EXIF metadata were removed without changing compressed
+pixel data. The source and built copies are byte-identical. OCR is a supporting check; inspect the
+full-size image before publishing future replacements.
 
 On macOS, run `swift scripts/check-screenshot-privacy.swift docs/public/screenshots` to repeat the OCR audit. Detailed findings are written to a private temporary report rather than terminal output. Public examples must contain only synthetic content and must exclude account identifiers, credentials and deployment addresses.
 

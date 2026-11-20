@@ -15,15 +15,19 @@ one level deeper.
 
 ## What a user sees
 
-The default task list contains active work grouped by time:
+The task workspace opens in **Task list**, not a calendar:
 
-- **Ongoing tasks**: recurring or tracking work;
+- **Ongoing tasks**: recurring or tracking work that Supervisor may wake again;
 - **Temporary tasks**: work expected to finish and stop;
-- exceptions inside the affected task card;
-- completed successful work separately.
+- **Completed**: successful terminal work, kept separately;
+- exceptions inside the affected task card.
 
 Cancelled tasks are not shown as active work and are not counted as completed. A cancelled task has
 stopped; it has not succeeded.
+
+On iOS, switch from Task list to month, week or day when a time view is useful. Calendar blocks are
+derived from real task occurrences and recurring projections; an unscheduled task is not assigned a
+made-up date.
 
 There is no second page-level budget alert. If one task exhausted its budget, that state appears only
 on that task. Raw token counts belong in the task's run detail.
@@ -39,6 +43,9 @@ The task model separates:
 
 Execution choice does not force a schedule. A temporary task can still run Agent Team work, and a
 long-running task can use a deterministic program trigger.
+
+The trigger may be one-off, daily/weekly, an explicit event, or a manual continuation. A reminder is
+one possible program action, not the definition of a task.
 
 ## Execution modes in plain language
 
@@ -84,6 +91,13 @@ and lets cancellation stop the relevant work.
 “Waiting” is not automatically an error. A normal notification delivery can be in progress. Only a
 user decision or a blocked/failed execution should appear as attention.
 
+### Supervisor
+
+Supervisor checks persisted schedules, waits, leases, timeouts, budgets and messages and requests a
+wake-up when a condition is due. It does not independently reason about the user's goal or claim a
+task is semantically correct. The bound TaskAgent owns execution, evidence and the completion
+report.
+
 ## Inspect a task
 
 The primary detail page keeps:
@@ -118,6 +132,10 @@ The sending Agent and receiving Agent are always named. Selecting a member opens
 
 Tool calls are collapsed by default. “Run command”, “browser” or raw implementation names are not
 used as the main explanation when the Agent supplied a semantic description.
+
+Every Oath tool call requires a short `description`. The primary exploration view uses that
+description, with the tool name as secondary context. Raw arguments and result JSON remain in the
+Agent or trace detail.
 
 ## Dynamic Workflow
 

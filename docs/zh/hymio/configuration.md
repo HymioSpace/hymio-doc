@@ -23,9 +23,11 @@ lan_host = "off"   # 局域网开发改为 "auto"
 | --- | --- |
 | `minimax_api_key`、`minimax_api_base` | 模型账户与兼容 Endpoint |
 | `models`、`vision_model` | 对话白名单与媒体模型 |
+| `model_context_windows` | 每个模型确认可用的 Context 容量，与 Oath 映射一致 |
 | `daytona_api_key`、`daytona_api_url`、`daytona_snapshot` | 托管电脑连接 |
 | `admin_user_ids` | 管理平台权限 |
 | `device_api_targets` | 分配给用户的 HTTPS 设备主机 |
+| `task_parallelism` | 任务委派子 Agent 的并发上限；仍受 Oath 总容量限制 |
 | `casdoor_port` | 身份服务端口，默认 8000 |
 | `invitation_codes` | 本机注册邀请码列表 |
 | `lan_host` | `off`、`auto` 或指定局域网地址 |
@@ -76,6 +78,28 @@ python3 deploy/cloud/manage.py start --config /opt/hymio/config/cloud.toml
 ```
 
 启动容器后仍需配置身份服务中的组织、登录应用和回调地址。容器健康并不代表模型能回复：完成账号登录后，发送一条短消息，再验证任务和设备授权链路。
+
+## 个人记忆与 Provider 凭据
+
+Nostalgia 是私有依赖，不能使用客户端临时提供的任意 URL。Backend 保存每用户绑定与 token 文件；
+绑定文件应位于 checkout 之外，并尽量以只读方式挂载私有目录。
+
+连接器凭据同样属于运营者私密输入：
+
+- Gmail 与滴答清单使用完整 client ID / secret，来源可以是环境变量或私有
+  `connectors_config_file`；
+- Apple 日历与健康使用签名 iOS entitlement、系统权限和明确上传同意，没有 Web OAuth 注册；
+- 连接器 token 由 Backend 数据库旁的密钥加密，备份时必须同时保存数据库与 `.connectors.key`；
+- APNs key、team / key ID 与 bundle ID 放在 Backend 私有配置。
+
+界面必须分别显示“部署未配置”“需要重新授权”和“临时同步失败”。没有注册不等于来源为空。
+
+## 通知策略
+
+通知设置决定哪些投递类别可以使用 APNs、锁屏是否显示摘要；它不会改写 Agent 的
+`notify_user` 语义内容。任务开始、完成与需要关注的通知来自任务状态，不允许 Agent 猜测生成。
+
+Kit 应用生成、Kit Host 与 `kit_*` 工具已退役，不需要配置。
 
 ## 故障排查
 

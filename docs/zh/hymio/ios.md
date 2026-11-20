@@ -2,6 +2,9 @@
 
 在 iPhone 上交代一件事，回到电脑继续追问；在手机上切换模型，Web 也使用同一个选择。Hymio 把对话、任务和账号偏好保存在同一后端，各端用适合自己的界面接入。
 
+当前 iPhone 外壳有三个一级入口：**此刻 / 对话 / 我的**。任务、记忆、连接、设备与设置都在“我的”
+下，通过子页面进入，不再扩张底部 Tab。
+
 ## 真实案例：手机列清单，电脑继续精简
 
 准备一次两天的短途旅行。我们用独立演示账号在原生 iOS 应用发起打包清单请求，再在 Web 登录同一个账号继续处理。
@@ -28,10 +31,10 @@
 | --- | --- | --- |
 | 持续对话 | 发消息、查看流式回复和历史 | 在同一段对话继续追问 |
 | 模型偏好 | 在「我的」选择对话模型 | 读取同一账号的选择 |
-| 任务 | 在「任务」安排、查看进展与结果 | 查看和管理同一批任务 |
+| 任务 | 从「我的 → 任务」进入，查看进展、结果与可选日历 | 在 Web 任务面板查看和管理同一批任务 |
 | 附件 | 原生端提供照片图库、文件选择和设备支持时的拍照入口 | 文件及对话结果归属同一账号 |
 | Hymio UI | 原生卡片、选项和输入组件 | 同一份界面数据由 Web 组件呈现 |
-| 执行记录 | 在「我的 → 工作记录」检查过程 | 查看同一执行记录 |
+| 执行记录 | 从相关任务或「调试与诊断」进入 | 查看同一执行记录 |
 
 ## 离开屏幕后，工作如何继续
 
@@ -48,9 +51,9 @@ iPhone 和 Web 应连接同一套 Hymio 部署，并登录同一账号。连接�
 
 ## Material 3 外壳
 
-原生 App 现在使用 Material 3 color roles、tonal surface、紧凑卡片层级和标准底部导航栏。
-Hymio 暂以 SF Pro 与 SF Symbols 作为 Roboto 与 Material Symbols 的平台原生例外；导航几何、
-selected indicator、间距和状态行为遵循 Material 3。
+原生 App 使用 Material 3 收敛层：color roles、tonal surface、紧凑卡片层级与三个目标的标准
+底部导航。Hymio 暂以 SF Pro 与 SF Symbols 作为平台原生例外；导航几何、selected indicator、
+间距和状态行为遵循 Material 系统。
 
 <DocGallery :images='[{"src": "/screenshots/hymio-material-home.png", "label": "Material 外壳", "caption": "移动端标准 Material 导航栏，选中项使用 tonal indicator。"}, {"src": "/screenshots/hymio-material-my.png", "label": "我的", "caption": "使用列表分组、浅色分组标题与 tonal surface，替代层层厚重卡片。"}]' />
 

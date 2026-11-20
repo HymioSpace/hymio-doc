@@ -41,6 +41,21 @@ Authorization: Bearer USER_ACCESS_TOKEN
 
 通过 `POST /settings/models` 与 `{"model":"MiniMax-M3"}` 修改。Backend 列表需要与已部署的 Oath 模型选项一致，Endpoint 和凭据由服务端配置。
 
+## Context 窗口
+
+同一设置接口还返回并接受 `context_window`。可选偏好为 128K、256K、512K 与 1M，默认 256K。
+`effective_context_window` 是偏好与当前模型已配置容量中的较小值。
+
+```json
+{
+  "model": "MiniMax-M3",
+  "context_window": 256000
+}
+```
+
+偏好按用户保存，并随下一条消息发送；Oath 会独立校验并冻结到该 step。选择 1M 不代表每个模型都
+能接受 1M，设置响应会给出实际生效值。压缩只改变模型可见历史，不删除已保存对话或个人记忆。
+
 ## 上传链路
 
 1. 向鉴权后的 `POST /attachments` 上传原始字节，`X-File-Name` 使用 URL 编码文件名。

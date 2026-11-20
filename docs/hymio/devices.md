@@ -1,59 +1,101 @@
-# Devices & administration
+# Connections & devices
 
-Hymio distinguishes a **client** from an **execution device**. Web and iPhone carry a conversation. An authorized cloud desktop gives the agent somewhere to run Bash, use a browser and interact with a desktop.
+Hymio distinguishes four things that often share a settings screen but have different trust and
+execution semantics:
 
-## Real case: iPhone and Web are online, but there is no cloud computer
+| Object | Purpose |
+| --- | --- |
+| Conversation client | Web, Desktop or iPhone reading chat and receiving events |
+| Connection | A Gmail, Dida, Calendar or Health source authorized for read-only context |
+| Personal execution device | A Mac or Android running HymioDevice |
+| Cloud computer | A provider-managed desktop allocated under operator policy |
 
-The same demo account signs into iPhone and Web. Both installations appear online, while Web explains that no cloud computer is assigned and an operator must grant access. Chat continues normally. Account login and message sync do not mean an execution environment has been allocated.
+An iPhone does not need to be added again as a “device” merely because it is a client. The iOS
+device page lists Mac, Android and cloud execution targets; the current conversation client is
+already authenticated.
 
-<DocGallery :images='[{"src": "/screenshots/hymio-ios-models.png", "label": "iOS", "caption": "Native iOS: iPhone and Web are online, with no cloud computer."}, {"src": "/screenshots/hymio-web-models.png", "label": "Web", "caption": "Web: conversation continues without an allocated cloud computer."}]' />
+## Connections
 
-The phone can still discuss a packing list and read replies. Remote browser or desktop work first needs a resource grant, followed by a device request.
+Open **My → Connections**. The page is a grouped list:
 
-## Real case: grant permission without creating a computer
+- **Cloud services** contains providers such as Gmail and Dida;
+- **This iPhone** contains Apple Calendar and Apple Health;
+- each provider uses one row and one detail page rather than a provider-specific hero layout;
+- status, coverage, last success, pending delivery and actions live in that detail.
 
-We ran the actual Backend and console with an isolated test database and granted Daytona access to a travel-demo user. The console changed to authorized, while cloud-computer count stayed at zero. Granting access did not provision a computer.
+Provider registration is deployment-specific. An unavailable provider says that the operator has
+not configured it; it does not show a broken “Connect” button or fabricated account.
 
-<DocFigure src="/screenshots/hymio-admin-grant.png" caption="Actual persisted grant: one authorized user, zero cloud computers. Account identifiers are outside the capture." />
+### What each source does
 
-Next, a user can request remote-environment work from iPhone or Web. The server checks access and capacity before preparing an environment. A successfully prepared computer then appears in the device list. This case verifies the saved grant; it does not claim an unexecuted cloud task succeeded.
-
-See the [operator walkthrough](./admin#real-case-grant-one-user-cloud-computer-access).
-
-## One environment, three interfaces
-
-Bash, browser automation and computer use target the same device ID, filesystem and desktop environment. Browser screenshots identify a page; desktop screenshots capture the visible screen. A machine's address is private provider configuration, not something the user pastes into a chat.
-
-| Provider | Current allocation limit | Integration |
+| Source | Initial collection | Permission boundary |
 | --- | --- | --- |
-| Daytona | 10 | Hosted sandbox API / SDK |
-| E2B | 20 | Existing-provider compatibility |
-| Operator-managed ECS | 1 | Host-side HTTPS device API |
-| Cloud phone | Disabled | Reserved for future integration |
+| Gmail | A bounded recent inbox and later history pages | Read-only; no send, edit or delete |
+| Dida | Bounded project/task pages and recent completed work | Read-only; no complete or modify |
+| Apple Calendar | Selected calendars from the previous 7 to next 30 days | Hymio reads only; Apple grants full calendar access |
+| Apple Health | Daily steps and active energy, up to 7 summarized days | No clinical records, no health writes |
 
-These are Hymio's configured allocation limits, not provider pricing or account entitlements. Billing and provider-side limits still apply.
+Cloud tokens are encrypted with a key stored beside the Backend database. Disconnect stops new
+collection and removes local provider credentials. Previously delivered context remains until a
+separate data policy removes it.
 
-## Permission before allocation
+Native upload requires explicit consent to send selected summaries to Hymio and configured AI
+models. OS permission alone is not that consent. HealthKit may return no readable samples even when
+permission exists; “no data” is not the same as zero activity or a refused prompt.
 
-New registrations receive no cloud devices. Operators allow an account to use a provider; a later device request allocates or resumes the environment. Disabling access stops future use without deleting files.
+## Personal Mac and Android
 
-Paused environments and uncertain allocations still occupy capacity. Confirmed release is a separate operation. Releasing a hosted sandbox can delete its data; detaching an operator-managed VM leaves the VM running outside Hymio.
+### Pair
 
-## A separate operator console
+1. Open **My → Devices → Connect Mac or Android**.
+2. Generate a five-minute, single-use code.
+3. Enter the Hymio server address and code in HymioDevice.
+4. Grant the OS permissions needed for the capabilities you choose.
 
-The console lives at `/admin/`, independently of the user application. It manages access, capacity and lifecycle. Every operation is authorized by the backend using the private `admin_user_ids` configuration.
+The device connects to Backend through outbound WSS, so no inbound home-network port is required.
+Each account may bind one Mac and one Android execution device. Device credentials stay in
+Keychain/Keystore; Backend stores only a digest.
 
-For local console development:
+### Capabilities
 
-```sh
-# From the Hymio repository, with Backend running
-pnpm --filter @hymio/admin dev
-```
+| Device | Capabilities | Important limit |
+| --- | --- | --- |
+| Personal Mac | Bash when explicitly enabled, browser and desktop control | Screen Recording and Accessibility permissions are local; Shell is off by default |
+| Personal Android | Screenshot, tap, swipe, text, back/home/recents | No Bash; unlocked device and screen-sharing consent required |
 
-After startup, use the console address printed in the terminal and its `/admin/` path. For a cloud deployment, use the operator-provided site address followed by `/admin/`. This documentation site does not host a console. See the local [Operator console guide](./admin) for sign-in, access grants and troubleshooting.
+Pause and revoke stop future commands. They cannot undo a click, shell command or external side
+effect that already ran. A disconnected or timed-out uncertain command is not automatically
+replayed.
 
-## Recovery should preserve trust
+## Cloud computers
 
-A timeout does not prove an action failed. Hymio records uncertain outcomes and preserves reservations rather than repeatedly creating computers. The agent should report a permission or capacity limit, not loop trying to repair credentials.
+Cloud providers are separate from personal devices. New accounts have no cloud resource until an
+operator grants a provider. Provisioning may continue in the background after the API returns
+`preparing`.
 
-Native Mac control and cloud phones remain future integrations. Their ownership and allocation should fit the same resource-management model.
+| Provider | Allocation model |
+| --- | --- |
+| Daytona | Hosted sandbox API |
+| Compatible E2B | Existing-provider compatibility |
+| Operator-managed Linux | Host-side HTTPS device API |
+
+Configured Hymio limits are not provider pricing or entitlement. Paused/uncertain environments can
+still consume capacity. Releasing a hosted sandbox can delete its data; detaching a self-managed VM
+does not shut that VM down.
+
+## Operator grant example
+
+<DocFigure src="/screenshots/hymio-admin-grant.png" caption="A persisted provider grant with zero cloud computers: permission and allocation are separate." />
+
+The screenshot uses an isolated database and synthetic user. The operator granted Daytona access;
+Hymio did not provision a paid desktop.
+
+## Current boundaries
+
+- Cloud phone execution and manual takeover are not shipped.
+- Chrome extension capture is still a scaffold.
+- Connector write actions are not included in the read-only foundation.
+- Gmail restricted-scope verification and physical Apple permissions require real deployment
+  acceptance.
+
+See [Operator console](./admin) for grants, monitoring and device lifecycle.
