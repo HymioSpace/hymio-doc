@@ -6,6 +6,11 @@ children. The central rule is simple:
 > Every Agent-backed TaskRun has one TaskAgent, and every collaborating Subagent belongs to that
 > TaskRun. A deterministic `program` Run has no TaskAgent.
 
+The second rule is **explicit ownership**. A Task has one coherent outcome. Every Subagent or
+Workflow node receives one concrete deliverable, required source inputs, in-scope work,
+exclusions/non-goals, observable acceptance criteria and a stop condition for insufficient or
+conflicting context. The TaskAgent retains final decisions, cross-part integration and completion.
+
 This rule makes multi-agent work observable, recoverable and safe to control. A user can cancel one
 task without deleting the conversation, inspect which Agent is doing what, and understand whether
 work is still running or merely scheduled for later.
@@ -59,6 +64,10 @@ Use `parallel_subagents` when the leader can divide independent work, run bounde
 integrate the results. Each child has its own context, journal, step budget, deadline and terminal
 result. Children return findings to the TaskAgent; they cannot delegate again.
 
+Children must have non-overlapping responsibilities. A vague assignment such as “research the
+topic” is invalid because it gives the user no stable boundary for progress, acceptance or
+cancellation.
+
 Best for:
 
 - comparing independent sources;
@@ -70,6 +79,9 @@ Best for:
 Use `agent_team` when members need to communicate while the work is still in progress. The TaskAgent
 acts as leader. Teammates can send durable peer messages, reply to the leader, and read messages in
 which they are sender or recipient.
+
+Each teammate has a distinct owned boundary. Communication may change how work is coordinated, but
+it does not transfer final accountability away from the TaskAgent.
 
 Team communication is not a transient WebSocket message. Each record stores:
 
@@ -102,6 +114,11 @@ Use `dynamic_workflow` when the TaskAgent must first decide dependencies between
 
 The leader receives the node results when it is woken for integration. It must not declare the Task
 complete while any workflow node is unfinished.
+
+Each node must be independently verifiable and state its own inputs, scope, exclusions and bounded
+output. Dependencies must represent a real data or decision handoff. The consumer view renders the
+edges as a DAG; it does not display Agent-to-Agent communication because that concept belongs to
+Agent Team.
 
 ## Task, Run and Agent hierarchy
 
@@ -192,7 +209,7 @@ exhaustion and no-progress detection normally pause for attention rather than pr
 
 | Failure | Required behavior |
 | --- | --- |
-| Budget exhausted | Persist partial checkpoint, pause owner, stop or pause children, request attention |
+| Budget exhausted | Persist partial checkpoint, pause owner, stop or pause children, request attention; after user authorization the Agent may raise the current Run budget and resume the same Run |
 | No progress | Pause only when no active external tool remains |
 | Child fails | Parent can inspect the failure; Dynamic Workflow blocks dependent nodes |
 | Agent ends without report | Pause with `REPORT_REQUIRED`; never infer completion from process exit |
@@ -202,6 +219,11 @@ exhaustion and no-progress detection normally pause for attention rather than pr
 
 Recovery is based on durable facts. Restarting a process is not evidence that an external side
 effect did or did not happen; uncertain effects require reconciliation.
+
+Budget continuation is not cancel-and-recreate. `task_adjust_budget` validates
+`BUDGET_EXHAUSTED`, increases step/token/time limits above current usage, keeps the same Task, Run,
+checkpoint and result history, and queues that Run again. The tool belongs to the interaction Agent;
+the task UI only explains that continuation should happen in conversation.
 
 ## Communication and context model
 
@@ -236,7 +258,7 @@ Keep this small:
 - one execution-mode label;
 - current user-visible result or blocker;
 - leader and bound members;
-- compact plan and workflow dependencies.
+- compact plan, or a Workflow DAG with directed dependency edges.
 
 ### Agent detail
 
@@ -257,7 +279,7 @@ default consumer task screen.
 
 | Tool family | Available to |
 | --- | --- |
-| `task_create/list/get/update/message/pause/resume/cancel/retry` | Interaction Agent |
+| `task_create/list/get/update/message/pause/resume/cancel/retry/adjust_budget` | Interaction Agent |
 | `task_report` | TaskAgent |
 | `subagent_spawn/list/get/cancel/continue` | TaskAgent only |
 | `subagent_notify` | Bound member |
@@ -329,8 +351,10 @@ with whom” to “what exactly happened” without losing context.
 
 - Show exceptions inside the affected task, not in a detached duplicate alert.
 - Treat cancellation as history, not success.
+- Put completed and cancelled work in a separate Archive; hide is soft and owner-scoped.
 - Use one label for execution mode; place its explanation behind a small help affordance.
 - Use `A → B` for communication direction; “from/to” without names is not enough.
+- Use a DAG for Dynamic Workflow and omit Agent communication from that mode.
 - Hide raw budget numbers in the primary list; show them in the task's run details.
 - Keep the main task page concise and place diagnostics one level deeper.
 

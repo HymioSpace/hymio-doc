@@ -5,6 +5,10 @@ Oath 现在把持续工作组织成任务系统，而不是一段带了若干临
 > 每个 Agent 执行模式的 TaskRun 只有一个 TaskAgent；所有参与协作的 Subagent 都必须绑定到该
 > TaskRun。确定性的 `program` Run 不创建 TaskAgent。
 
+第二条规则是 **明确所有权**。一个 Task 只负责一个连贯结果。每个 Subagent 或 Workflow 节点都要收到
+一个具体交付物、输入来源、负责范围、排除项/非目标、可观察验收标准，以及上下文不足或冲突时的
+停止条件。最终决策、跨部分整合和完成权仍属于 TaskAgent。
+
 这条规则让多 Agent 工作可观察、可恢复，也让它能被安全地暂停和取消。用户可以只取消某一项任务，
 不需要删除整段对话；可以看清哪个 Agent 在做什么；也可以区分“仍在执行”和“只是安排在未来”。
 
@@ -50,6 +54,9 @@ Oath 现在把持续工作组织成任务系统，而不是一段带了若干临
 `parallel_subagents` 适合 Leader 能够拆分独立工作、并行执行、最后整合的任务。每个孩子有独立 context、
 Journal、步骤预算、deadline 和终态，只能把结果交回 TaskAgent，不能再次委派。
 
+孩子之间的职责不能重叠。“帮我研究这个话题”这类模糊任务不合格，因为没有稳定边界可以判断进展、
+验收或取消范围。
+
 适合：
 
 - 比较相互独立的来源；
@@ -60,6 +67,8 @@ Journal、步骤预算、deadline 和终态，只能把结果交回 TaskAgent，
 
 `agent_team` 适合成员在工作过程中需要互相沟通的任务。TaskAgent 是 Leader，Teammate 可以在同一个 Run
 内发送持久消息、回复 Leader，并读取自己作为发送者或接收者的消息。
+
+每个 Teammate 都有独立职责边界。通信可以改变协作方式，但不能把最终责任从 TaskAgent 转移出去。
 
 Team 消息不是一条临时的 WebSocket 通知。每条消息持久保存：
 
@@ -90,6 +99,9 @@ Team 消息不是一条临时的 WebSocket 通知。每条消息持久保存：
 5. 在最终 join 后唤醒 TaskAgent。
 
 Leader 被唤醒时收到节点结果。只要还有工作流节点没有完成，它就不能宣称 Task 已经完成。
+
+每个节点必须可以独立验证，并明确输入、范围、排除项和有界输出。依赖必须代表真实的数据或决策交接。
+C 端以 DAG 展示节点与有向边；这里不展示 Agent 间通信，因为通信属于 Agent Team。
 
 ## Task、Run 与 Agent 的层级
 
@@ -177,7 +189,7 @@ Supervisor 可以从持久状态唤醒或对账这两类 Run。它不是第二�
 
 | 失败 | 必须的行为 |
 | --- | --- |
-| 预算耗尽 | 保存已有检查点，暂停 owner，停止或暂停 child，并要求用户关注 |
+| 预算耗尽 | 保存已有检查点，暂停 owner，停止或暂停 child，并要求用户关注；用户授权后，Agent 可以提高当前 Run 预算并继续同一个 Run |
 | 长时间无进展 | 只有没有任何外部工具仍在运行时才暂停 |
 | Child 失败 | Parent 可以查看失败；Dynamic Workflow 阻断依赖节点 |
 | Agent 未报告就结束 | 以 `REPORT_REQUIRED` 暂停，不能把进程结束推断为完成 |
@@ -186,6 +198,10 @@ Supervisor 可以从持久状态唤醒或对账这两类 Run。它不是第二�
 | 服务重启 | Supervisor 对持久 Run、队列和 Agent 终态进行对账 |
 
 恢复必须基于持久事实。进程重启不能证明外部副作用是否发生；不确定副作用仍需幂等或对账。
+
+预算继续不是取消后重建。`task_adjust_budget` 只接受 `BUDGET_EXHAUSTED` 的暂停 Run，新上限必须
+高于当前用量；它保留同一个 Task、Run、检查点和结果历史，再把该 Run 放回队列。该工具由主交互
+Agent 使用，任务 UI 只提示用户在对话中继续。
 
 ## 通信与 context
 
@@ -219,7 +235,7 @@ TaskAgent 必须为每次委派提供足够的任务专属资料。
 - 一个执行方式标签；
 - 用户当前能看到的阶段结果或 blocker；
 - Leader 与绑定成员；
-- 简洁计划和 Workflow 依赖。
+- 简洁计划，或带方向依赖边的 Workflow DAG。
 
 ### Agent 二级
 
@@ -239,7 +255,7 @@ TaskAgent 必须为每次委派提供足够的任务专属资料。
 
 | 工具族 | 可用角色 |
 | --- | --- |
-| `task_create/list/get/update/message/pause/resume/cancel/retry` | 交互 Agent |
+| `task_create/list/get/update/message/pause/resume/cancel/retry/adjust_budget` | 交互 Agent |
 | `task_report` | TaskAgent |
 | `subagent_spawn/list/get/cancel/continue` | 仅 TaskAgent |
 | `subagent_notify` | 绑定成员 |
@@ -304,8 +320,10 @@ C 端任务页不应原样呈现技术字段，而要转换成稳定层级，并
 
 - 异常展示在对应任务内部，不在页面顶部重复一张独立告警。
 - 取消属于历史，不属于成功。
+- 已完成与已取消任务进入独立归档；移除是软隐藏，并按所有者隔离。
 - 执行方式只显示一个短标签，解释放在旁边的小问号里。
 - Agent 通信直接写 `A → B`，只有“来自/发给”而没有名字不够清楚。
+- Dynamic Workflow 使用 DAG，不展示不适用的 Agent 通信。
 - 一级任务列表隐藏原始预算数字，详情里的 Run 区再展示。
 - 主任务页保持简洁，诊断信息下沉一层。
 
