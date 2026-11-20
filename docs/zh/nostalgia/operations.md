@@ -44,6 +44,8 @@ Hymio 不会把生成的 Nostalgia token 暴露给客户端、Oath 或模型。
 
 如果开通暂时失败，登录仍然可用并返回 `context_ready=false`。首次记忆操作会自动重试开通，用户
 不需要重新注册。现有 per-user JSON 连接文件是迁移和运营兜底，不再是正常账号流程。
+已有静态绑定第一次被使用时，Hymio 会把原 token 开通到动态摘要表中，并把 URL / token 保存为加密
+绑定。之后可以移除 JSON 文件，而不会让旧账号失效。
 
 没有绑定时返回 “context unavailable”，不能伪装成成功空账号。界面必须把读取失败和确认空账号
 区分开。

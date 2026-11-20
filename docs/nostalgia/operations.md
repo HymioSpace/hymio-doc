@@ -48,6 +48,9 @@ the model.
 If provisioning is temporarily down, login remains usable and returns `context_ready=false`. The
 first memory operation retries provisioning, so the user never needs to register again. The current
 per-user JSON connection file is a migration and operator fallback, not the normal account flow.
+When an existing static binding is first used, Hymio provisions that same legacy token into the
+dynamic digest table and stores the URL/token as an encrypted binding. The JSON file can then be
+retired without invalidating existing accounts.
 
 An absent binding returns “context unavailable”, not an empty successful memory. The UI must keep
 read failure distinct from a confirmed empty account.
