@@ -7,13 +7,13 @@ and Oath does not need its Python package.
 
 | Variable | Purpose |
 | --- | --- |
-| `NOSTALGIA_TOKENS_JSON` | JSON object mapping bearer tokens of at least 16 characters to stable owner IDs. |
+| `NOSTALGIA_TOKENS_JSON` | Optional static JSON object mapping bearer tokens of at least 16 characters to stable owner IDs. It remains for migration and standalone testing; automatic Hymio provisioning does not require it. |
 | `NOSTALGIA_DATABASE` | SQLite path; default `data/nostalgia.sqlite3`. |
 | `NOSTALGIA_HOST`, `NOSTALGIA_PORT` | Listener address and port selected by the private deployment. |
 | `NOSTALGIA_DREAMING_ENABLED` | Starts the scheduled dream worker. |
 | `NOSTALGIA_DREAMING_INTERVAL_SECONDS` | Cycle interval; default 600, minimum 60. |
 | `NOSTALGIA_DREAMING_PROVIDER_URL` | Private HTTP(S) proposal endpoint. |
-| `NOSTALGIA_DREAMING_PROVIDER_TOKEN_FILE` | Optional bearer token file for that provider. |
+| `NOSTALGIA_DREAMING_PROVIDER_TOKEN_FILE` | Shared private service credential for the proposal provider and the token-provisioning control plane. |
 | `NOSTALGIA_DREAMING_BATCH_MAX_RECORDS` | Maximum input records in one dream. |
 | `NOSTALGIA_DREAMING_BATCH_MAX_CHARS` | Maximum serialized input characters. |
 | `NOSTALGIA_DREAMING_DRAFT_TIMEOUT_SECONDS` | Age after which a stuck draft is aborted. |
@@ -34,10 +34,20 @@ provider. Keep the Nostalgia port private unless an authenticated operator expli
 
 ## Hymio binding
 
-Hymio uses a private per-user JSON file whose entries contain the Nostalgia base URL and a token-file
-reference. The token file resolves relative to that JSON file unless absolute. The Backend loads the
-binding for the authenticated Hymio user and proxies the request; clients and Oath never receive the
-Nostalgia token.
+Hymio's Backend calls the service-only
+`PUT /v1/admin/tokens/{user_id}` endpoint during password registration, OIDC session exchange and
+refresh. The operation is idempotent. Hymio derives a stable per-user credential, stores only its
+encrypted form, and uses the same Hymio `user_id` as the Nostalgia namespace. Multiple Backend
+workers converge on the same credential instead of racing to create different tokens.
+
+Set `nostalgia_url` in `hymio.toml` to the private service URL. Mount the Backend
+`service_token_file` into Nostalgia as `NOSTALGIA_DREAMING_PROVIDER_TOKEN_FILE`; the public edge must
+still reject `/internal/*`. Hymio does not expose the generated Nostalgia token to clients, Oath or
+the model.
+
+If provisioning is temporarily down, login remains usable and returns `context_ready=false`. The
+first memory operation retries provisioning, so the user never needs to register again. The current
+per-user JSON connection file is a migration and operator fallback, not the normal account flow.
 
 An absent binding returns “context unavailable”, not an empty successful memory. The UI must keep
 read failure distinct from a confirmed empty account.
@@ -49,7 +59,8 @@ service token. The public HTTPS edge must reject `/internal/*`.
 
 The database uses WAL. Use SQLite's online backup API or stop the service and copy the complete data
 directory, including WAL/SHM files when present. Copying only the running main database can lose
-committed data.
+committed data. Back up Hymio's `hymio.context.key` together with its SQLite database; without that
+key, encrypted per-user context bindings cannot be recovered.
 
 Restore the database before starting the replacement service. Keep the token mapping outside the
 database private. After restoring, verify:
@@ -60,6 +71,8 @@ database private. After restoring, verify:
 - the current `_index` and `_core` are readable;
 - `/v1/events` resumes from the consumer's stored checkpoint;
 - no older draft blocks the next scheduled cycle.
+- a newly registered Hymio account can write and read its first Nostalgia record without manual
+  token creation.
 
 ## Health and administration
 

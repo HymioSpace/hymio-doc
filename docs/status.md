@@ -32,6 +32,9 @@ It does not mean every deployment has enabled the feature.
   Agent can enlarge the current Run budget and continue from its checkpoint without re-creating it.
 - Conversation anchoring based on actual visible content, keyboard dismissal after send, and
   downward expansion of working details without page-level blank ranges.
+- Task definitions use a summary plus a bounded rendered reading sheet instead of expanding a long
+  raw objective in-place. Agent activity retains the complete bounded history rather than only the
+  latest ten or twenty records.
 - Tool activity uses the model-supplied semantic `description`; raw command syntax and generic
   transport labels are fallback/debug detail rather than primary user copy.
 - Trace lists use the first input body as a readable title, show local wall-clock and elapsed time,
@@ -56,8 +59,8 @@ It does not mean every deployment has enabled the feature.
   still be required before broad distribution.
 - Apple Calendar and Apple Health require a signed iOS build, physical-device permission checks,
   HealthKit capability and explicit user consent to upload selected summaries.
-- APNs, Live Activities, cloud providers, Nostalgia bindings and administrator IDs require private
-  deployment configuration.
+- APNs, Live Activities, cloud providers, the Nostalgia service URL and administrator IDs require
+  private deployment configuration. User-level Nostalgia binding is automatic at account login.
 - Real provider quotas, cloud-phone availability and App Store privacy requirements depend on the
   operator and provider account.
 
@@ -85,6 +88,8 @@ It does not mean every deployment has enabled the feature.
   per-Agent context isolation.
 - External application context providers, model/window selection, media tools and private
   authentication integrations.
+- Optional `agent.compress_model` separates bounded history compaction from the main model and uses
+  that model's context capacity.
 
 ### Important boundary
 
@@ -111,8 +116,11 @@ observer, not a second reasoning model.
   snapshots and source-version conflict handling.
 - Bounded record/artifact graph query and retrieval with one- or two-hop expansion, explicit
   truncation and snapshot conflicts.
-- Private per-user connection through Hymio Backend, with no Nostalgia token exposed to clients,
-  Oath, or the model.
+- Automatic per-user provisioning from the single Hymio registration/login flow. Provisioning is
+  idempotent across retries and workers, can start with zero static tokens, and is retried lazily on
+  the first memory operation after an outage.
+- Encrypted private per-user connection through Hymio Backend, with no Nostalgia token exposed to
+  clients, Oath, or the model.
 
 ### Not claimed
 

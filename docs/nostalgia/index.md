@@ -5,8 +5,11 @@ lets a scheduled dreaming process propose durable understanding, validates that 
 publishes the result as one versioned state. Agents can then read a bounded overview, retrieve
 cards and follow their evidence back to the original records.
 
-The service is implemented and integrated with Hymio when an operator binds a user to a Nostalgia
-endpoint. Basic chat can run without Nostalgia; memory and context-originated task discovery cannot.
+The service is implemented and integrated with the same Hymio account used for login. When a user
+registers or signs in, Hymio provisions a Nostalgia namespace keyed by the stable Hymio `user_id`.
+There is no second account or user-visible binding step. Basic chat can run if provisioning is
+temporarily unavailable; memory and context-originated task discovery recover automatically when the
+context service returns.
 
 <ProjectOverviewMap kind="nostalgia" />
 
@@ -65,6 +68,11 @@ Host or generated-application runtime is active.
 | Dreaming schedule, draft validation, atomic commit and rollback | Nostalgia |
 | Proposal model invocation and application-specific task comparison | Hymio Backend |
 | Agent execution, task state and tool lifecycle | Oath |
+
+Hymio is the identity authority. It creates one Nostalgia token per Hymio user, encrypts that token
+with a key next to the Backend database, and keeps the credential server-side. The Nostalgia token
+never enters the browser, mobile client, Oath or model context. Static token maps remain available
+for existing deployments and standalone Nostalgia testing, but they are not the registration path.
 
 ## Important boundaries
 

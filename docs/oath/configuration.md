@@ -21,6 +21,23 @@ timeout_seconds = 60
 
 Choices are validated before admission and persisted per user. A prepared step keeps its model during tool continuation and retries. Clients cannot submit arbitrary provider endpoints or credentials.
 
+## History compaction model
+
+`agent.compress_model` optionally selects a different configured model for history compaction. It
+must name the default provider model, a `selectable_models` entry, or a named
+`model_providers.<choice>`:
+
+```toml
+[agent]
+compress_model = "deepseek-flash"
+```
+
+The Worker builds its compaction provider with that model and uses the matching context-window
+capacity. Leaving the field empty preserves the previous behavior and uses the main provider model.
+This separation prevents an unavailable or low-balance primary compression model from blocking a
+long task after several successful conversation steps. A compaction failure still preserves the
+original history and is reported as such; it does not silently truncate the task.
+
 ## Application instructions
 
 ```sh
@@ -84,6 +101,7 @@ Rejected, expired or unavailable verification denies access. Gateway rechecks li
 | `agent.skill_index_tokens` | Prompt budget for Skill index |
 | `agent.context_provider_url` | Optional application context endpoint |
 | `agent.permission_policy_url` | Private tool authorization endpoint |
+| `agent.compress_model` | Optional configured model used only for bounded history compaction |
 | `services.workers` | Shared Worker pool size |
 | `services.lease_seconds` | Execution ownership lease |
 | `supervisor.invoke_interval_seconds` | Pending-work observation interval |

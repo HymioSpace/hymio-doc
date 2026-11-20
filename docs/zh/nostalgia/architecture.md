@@ -10,7 +10,8 @@ Hymio 负责采集与产品策略，Oath 负责执行；Nostalgia 不运行普�
 flowchart LR
   Sources[对话、手记、Gmail、滴答清单、日历、健康] --> Hymio[Hymio Backend]
   Hymio -->|幂等记录| N[Nostalgia API]
-  N --> Store[(SQLite：records、versions、details、events)]
+  Hymio -->|开通并加密保存每用户 token| N
+  N --> Store[(SQLite：records、versions、details、events、token 摘要)]
   Scheduler[Dream scheduler] --> Provider[Hymio proposal adapter]
   Provider --> Model[配置的模型]
   Model -->|校验前的 JSON 提案| Scheduler
@@ -21,7 +22,8 @@ flowchart LR
 ```
 
 模型可见的 `remember` 和 `recall` 位于 Hymio。它们调用 Hymio 的认证 Context 代理；代理再按用户
-解析私有 Nostalgia endpoint 与 bearer token。凭据不进入 prompt、客户端或 Oath。
+解析自动开通的 Nostalgia endpoint 与 bearer token。Hymio 只保存加密 token，Nostalgia 只保存
+token 摘要。凭据不进入 prompt、客户端或 Oath。
 
 ## 请求与服务分层
 
@@ -30,7 +32,7 @@ flowchart LR
 | `api/` | FastAPI 路由、Bearer 身份、请求大小、JSON 错误、服务生命周期与调度启动 |
 | `core/` | 记录规则、draft / commit 状态机、assembly、游标、搜索与有界图读取 |
 | `protocol/` | 严格请求 / 响应模型、ID、来源元数据、artifact 与 relation |
-| `storage/` | SQLite 事务、幂等回执、签名游标与追加式 Context 事件 |
+| `storage/` | SQLite 事务、token 摘要、幂等回执、签名游标与追加式 Context 事件 |
 | `dreaming.py` | 周期选择有界输入、调用 Provider、应用提案与写入失败事件 |
 
 读写都使用短事务。模型 / Provider 调用发生在长数据库事务之外。
