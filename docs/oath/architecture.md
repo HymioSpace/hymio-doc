@@ -34,6 +34,23 @@ The Supervisor is a separate observer of durable pending work. It periodically c
 
 Process restart belongs to Docker or another deployment manager. Trace-aware diagnosis and model-assisted repair remain future work.
 
+### Durable task layer
+
+On top of the event runtime, Oath owns a task system:
+
+- a **Task** records intent, trigger, acceptance, policy, plan and budget;
+- a **TaskRun** records one execution attempt and all resumable state;
+- a **TaskAgent** owns one Run;
+- every collaborating **Subagent** is bound to that Run;
+- execution can be program-only, parallel Subagents, Agent Team or Dynamic Workflow.
+
+Time scope and execution mode are independent. “Temporary/ongoing” describes when the work exists;
+“program/parallel/Team/Workflow” describes how one attempt executes.
+
+The task layer is the recovery boundary for supervised work. It prevents unbound background children,
+keeps Agent communication durable, and makes cancellation and pauses observable. Read
+[Multi-agent tasks and collaboration](./delegation) before extending task or Agent behavior.
+
 <EventJourney />
 
 ## How one input advances

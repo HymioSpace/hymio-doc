@@ -28,3 +28,12 @@ All 14 screenshots were visually reviewed and scanned with Apple Vision OCR for 
 On macOS, run `swift scripts/check-screenshot-privacy.swift docs/public/screenshots` to repeat the OCR audit. Detailed findings are written to a private temporary report rather than terminal output. Public examples must contain only synthetic content and must exclude account identifiers, credentials and deployment addresses.
 
 The A2UI native capture was replaced with a fresh natural-language request about a short walk. The screenshot shows that ordinary Chinese request and the model-generated two-option card together, with fifteen minutes selected. The user prompt contains no JSON or protocol instructions. The native action was submitted and its visible message verified. The replacement passed the same OCR and metadata checks.
+
+`hymio-material-{home,my,tasks}.png` were captured on 2026-11-20 from the native iOS
+simulator after the Material 3 shell migration. They use synthetic preview accounts and local task
+fixtures only. The captures show the compact navigation bar, My-page grouping and the current task
+list without a duplicate page-level attention card.
+
+`hymio-material-agent-communication.png` and `hymio-material-workflow.png` use the same synthetic
+multi-Agent fixtures. They demonstrate explicit sender → recipient communication and the
+dependency-oriented Dynamic Workflow view without exposing user data.

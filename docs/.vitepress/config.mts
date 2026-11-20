@@ -36,7 +36,7 @@ function config(zh = false) {
         "oath/configuration",
       ],
       [
-        zh ? "子 Agent 与应用事件" : "Subagents & application events",
+        zh ? "多 Agent 任务与协作" : "Multi-agent tasks & collaboration",
         "oath/delegation",
       ],
     ]),
@@ -89,7 +89,7 @@ export default defineConfig({
       "link",
       { rel: "icon", type: "image/svg+xml", href: `${base}brand/hymio.svg` },
     ],
-    ["meta", { name: "theme-color", content: "#f8f7f3" }],
+    ["meta", { name: "theme-color", content: "#f9f9ff" }],
   ],
   locales: {
     root: { label: "English", lang: "en", themeConfig: config() },

@@ -34,6 +34,22 @@ Supervisor 是独立观察待办工作的服务。当前它会定期检查持久
 
 进程重启由 Docker 或部署平台负责。基于 Trace 的自动诊断和模型辅助修复仍属于后续工作。
 
+### 持久任务层
+
+在事件运行时之上，Oath 还持有一套任务系统：
+
+- **Task** 保存目标、trigger、验收、策略、计划与预算；
+- **TaskRun** 保存一次执行尝试及全部可恢复状态；
+- **TaskAgent** 负责一个 Run；
+- 所有参与协作的 **Subagent** 都绑定该 Run；
+- 执行方式可以是 program、并行 Subagent、Agent Team 或 Dynamic Workflow。
+
+时间维度与执行方式相互独立。“临时/长期”描述工作存在多久；“program/并行/Team/Workflow”描述一次执行
+如何完成。
+
+任务层是受监督工作的恢复边界。它阻止未绑定的后台孩子，持久保存 Agent 通信，并让取消与暂停具备
+可预测语义。扩展任务或 Agent 行为前，请先阅读[多 Agent 任务与协作](./delegation)。
+
 <EventJourney />
 
 ## 一次输入如何执行

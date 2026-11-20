@@ -95,3 +95,38 @@ Button 点击后替换 <code v-pre>{{input-id}}</code> 中的当前输入值，�
 每块最多 64 KiB、64 个节点、深度 12，每字段最多 2,000 字符。ID 使用 `[A-Za-z0-9_-]{1,64}`，原型相关保留 ID 会被拒绝。不支持原始 HTML、脚本、CSS 或任意网络请求，也尚未实现跨消息 surface 更新和任意图表 / Canvas。
 
 模型可读的目录位于 [Hymio UI Skill](https://github.com/HymioSpace/Hymio/blob/main/extensions/skills/hymio-ui/SKILL.md)，通过应用 Skill 目录加载。
+
+## Material 3 应用外壳
+
+Hymio A2UI 与产品导航现在共享 Material Design 3 基础。两者不是同一层：A2UI 控制模型生成的助手内容，
+Material 应用外壳控制 Hymio 产品本身。
+
+### Token 与表面
+
+- 使用 Hymio 蓝色作为 Material source color；
+- primary/container 与对应 on-color 成对使用，组件内部不直接硬编码 hex；
+- 使用 `surface`、`surface-container-low`、`surface-container`、`surface-high`；
+- 卡片主要使用 tonal surface 与 outline，阴影只留给菜单、对话框和临时浮层；
+- Chip 和导航选中指示器使用全圆角，普通卡片使用中等 shape。
+
+### 导航
+
+- iOS 与移动 Web 使用标准底部导航栏，不再使用悬浮胶囊；
+- 桌面 Web 使用 navigation rail；
+- 选中项使用 tonal indicator 与明确前景色，不靠厚重阴影；
+- 底部导航贴边并保留 safe area。
+
+### 内容层级
+
+- 页面级解释保持简短；
+- 异常只出现在受影响的任务或列表项内部；
+- 执行方式说明由小问号按需展开；
+- Agent 通信使用 `发送者 → 接收者`；
+- 原始 trace 与工具 JSON 留在开发者/运维层。
+
+### 可访问性与状态
+
+- iOS touch target 至少 48pt，Web 至少 48px；
+- Web 键盘 focus 使用清晰 ring；
+- selected、pressed、disabled、loading、empty、error 不能只靠颜色区分；
+- 尊重 reduced motion 与 reduced transparency。

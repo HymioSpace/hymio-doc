@@ -37,10 +37,25 @@ See [Models & attachments](./media) for the complete model and input-material ca
 
 Switching apps or closing a browser does not cancel accepted server work. Returning to the foreground refreshes credentials, restores the iOS cache and synchronizes events. Each installation tracks its own received position.
 
-Distinguish pending messages from accepted work. Pending input waits for connectivity; accepted work advances on the server. This is not continuous on-phone background agent execution or push notification support.
+Distinguish pending messages from accepted work. Pending input waits for connectivity; accepted work
+advances on the server. Push notifications and one aggregate Live Activity can reconnect the user
+when work starts, needs attention or completes. This still does not run the Agent continuously on
+the phone.
 
 ## Before using it
 
-Connect iPhone and Web to the same deployment and sign into the same account. Different backends or accounts are not automatically merged. The native app supports account-password login; browser OIDC login, voice input, push delivery and native phone control remain future work.
+Connect iPhone and Web to the same deployment and sign into the same account. Different backends or
+accounts are not automatically merged. The native app supports account-password login and APNs when
+the deployment is configured. Browser OIDC login, voice input and full native phone control remain
+future work.
+
+## Material 3 shell
+
+The native app now uses Material 3 color roles, tonal surfaces, compact card hierarchy and a
+standard bottom navigation bar. Hymio keeps SF Pro and SF Symbols as platform-native exceptions to
+Roboto and Material Symbols; navigation geometry, selected indicators, spacing and state behavior
+follow Material 3.
+
+<DocGallery :images='[{"src": "/screenshots/hymio-material-home.png", "label": "Material shell", "caption": "Compact Material navigation bar with a tonal selected indicator."}, {"src": "/screenshots/hymio-material-my.png", "label": "My", "caption": "List-based grouping, muted section labels and tonal surfaces replace stacked heavy cards."}]' />
 
 Start with [Install & start](./getting-started), or see [LAN configuration](./configuration#lan-and-ios) for an existing deployment.

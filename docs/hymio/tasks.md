@@ -1,66 +1,207 @@
-# Tasks & scheduling
+# Tasks and multi-Agent work
 
-A task records an intended outcome. A run records one attempt to achieve it. Scheduling is one way to start an attempt; work captured from an ongoing conversation is another.
+The task screen answers one question: **what still needs to happen, and what has already been
+produced?**
 
+It is not a cron editor and it is not a raw Agent debugger. Hymio displays tasks owned and executed
+by Oath, keeps the primary view understandable, and puts Agent context, communication and tool calls
+one level deeper.
 
-## Real case: create a departure-check task on iPhone
+<DocFigure
+  variant="phone"
+  src="/screenshots/hymio-material-tasks.png"
+  caption="Current Material 3 task list. Exceptions are no longer duplicated above the affected task."
+/>
 
-In native iOS Tasks, we created `Weekend packing check`: organize checks for an ID card, charger, umbrella and hotel luggage storage, answer in Chinese and avoid cloud-computer operations.
+## What a user sees
 
-1. **Set the goal:** enter a title and objective, choose now, and submit.
-2. **Acceptance and sync:** iPhone first shows the task as scheduled. Web under the same account can open the task and its single execution record.
-3. **Inspect the outcome:** after completion, the iPhone result detail lists three categories of checks and explicitly preserves hotel questions that the traveler must confirm.
+The default task list contains active work grouped by time:
 
-<DocGallery :images='[{"src": "/screenshots/hymio-ios-task.png", "label": "iOS · scheduled", "caption": "Native iOS: the submitted task is scheduled."}, {"src": "/screenshots/hymio-ios-task-result.png", "label": "iOS · completed", "caption": "The same task after completion: outcome, unresolved questions and work record."}, {"src": "/screenshots/hymio-tasks.png", "label": "Web · original", "caption": "Original Web task-detail example, using demonstration records created through the product data layer."}]' />
+- **Ongoing tasks**: recurring or tracking work;
+- **Temporary tasks**: work expected to finish and stop;
+- exceptions inside the affected task card;
+- completed successful work separately.
 
-The completed objective is to organize a checklist, not to verify the hotel's policy. Scheduled is not completed; inspect the particular run and its outcome.
+Cancelled tasks are not shown as active work and are not counted as completed. A cancelled task has
+stopped; it has not succeeded.
 
-## Use a task
+There is no second page-level budget alert. If one task exhausted its budget, that state appears only
+on that task. Raw token counts belong in the task's run detail.
 
-Ask the agent to do something with an identifiable outcome, or create it in Tasks. Give a clear objective and completion condition. Inspect the current phase, latest progress, next step and final result from its detail view.
+## One outcome, two axes
 
-Examples include comparing options, preparing a document, and sending a one-time reminder. A greeting or an undecided idea does not need a task.
+The task model separates:
 
-## Two state machines
+| Axis | Choices | What it means |
+| --- | --- | --- |
+| Time | temporary / ongoing | One bounded outcome or continuing tracking/recurrence |
+| Execution | program / parallel Subagents / Agent Team / Dynamic Workflow | How the current Run is carried out |
 
-| Record | States |
+Execution choice does not force a schedule. A temporary task can still run Agent Team work, and a
+long-running task can use a deterministic program trigger.
+
+## Execution modes in plain language
+
+| Label | Use it when | User-visible result |
+| --- | --- | --- |
+| Automated | A fixed action is enough; no model is needed | “Sending” / receipt / completed |
+| Agent parallel | Independent work can be split and merged | Leader and bound helpers |
+| Agent Team | Helpers must coordinate while working | Leader, members and `A → B` messages |
+| Dynamic workflow | Steps have dependencies | Dependency list and node results |
+
+The mode label is intentionally short. A small help button explains it only when requested.
+
+## Task, Run and Agent
+
+| Record | Meaning |
 | --- | --- |
-| Task | `active`, `paused`, `cancelled`, `archived` |
-| Run | `scheduled`, `delivering`, `ready`, `running`, `blocked`, `succeeded`, `failed`, `cancelled`, `expired` |
+| Task | The durable outcome and policy |
+| Run | One execution attempt |
+| TaskAgent | The Agent responsible for that Run |
+| Subagent | A Team member or workflow node bound to the same Run |
 
-A task can remain `active` while its most recent run has succeeded. For a recurring task, the next occurrence is planned after the current run terminates. A tool result alone does not establish completion of the overall task.
+Every Subagent belongs to a TaskRun. This is what lets the UI answer “who is working for which task?”
+and lets cancellation stop the relevant work.
 
-Pause prevents pending scheduled work from being admitted. Cancel also ends linked delegation. An external action already dispatched cannot be undone by changing the task state.
+## Status language
 
-## Scheduling contract
+### Task
 
-Schedules support `now`, `once`, `daily` and `weekly`. Timed schedules require an IANA timezone. One-time `at` values must include an offset; weekly weekdays use Monday = 0.
+- active;
+- paused;
+- closed: achieved, cancelled or expired.
 
-```json
-{
-  "action": "create",
-  "title": "Review the weekly plan",
-  "objective": "Review open items and suggest next steps",
-  "success_criteria": "A concise review is posted in the conversation",
-  "schedule": {
-    "mode": "weekly",
-    "timezone": "Europe/London",
-    "weekday": 0,
-    "time": "09:00",
-    "grace_seconds": 900,
-    "run_timeout_seconds": 3600
-  }
-}
+### Current Run
+
+- preparing;
+- running;
+- waiting for a real condition;
+- paused for attention;
+- succeeded;
+- failed;
+- cancelled.
+
+“Waiting” is not automatically an error. A normal notification delivery can be in progress. Only a
+user decision or a blocked/failed execution should appear as attention.
+
+## Inspect a task
+
+The primary detail page keeps:
+
+1. title and current state;
+2. one time label and one execution-mode label;
+3. an attention explanation when needed;
+4. current Run progress and compact budget usage;
+5. the plan or workflow dependencies;
+6. the leader and bound members;
+7. the user-visible final result.
+
+The task definition is collapsed by default. Technical event payloads and raw tool JSON are not part
+of the consumer task page.
+
+## Agent collaboration
+
+For parallel Subagents, the primary view shows the TaskAgent and its bound helpers. For Agent Team,
+communication records use explicit direction:
+
+```text
+Architecture research → Research leader
+Research leader → Framework comparison
 ```
 
-Send this body to `POST /tasks` with the user's bearer token. Backend uses indexed due times and a bounded scheduler loop; no daily cron planner is required. Due delivery uses `app.task.due` and a stable run ID. Start checks the task generation and state again, rejecting stale deliveries.
+The sending Agent and receiving Agent are always named. Selecting a member opens:
 
-Overdue work is reconciled against its grace period. Outside the allowed window it can expire instead of executing a stale reminder. Recurrence catches up at most once rather than replaying every missed occurrence.
+- responsibility and acceptance;
+- Team communication;
+- chronological execution records;
+- semantic tool calls.
 
-## Conversation capture and delegation
+Tool calls are collapsed by default. “Run command”, “browser” or raw implementation names are not
+used as the main explanation when the Agent supplied a semantic description.
 
-The internal `capture` action records already-admitted work without submitting another due event. A stable `intent_key` prevents duplicate capture. Public clients cannot call capture.
+## Dynamic Workflow
 
-A running task can attach a bounded Oath subagent using the run ID as request identity. Backend mirrors findings and terminal status into the task history. Oath owns child execution; Hymio owns the task's business state.
+For Dynamic Workflow the task page shows the dependency graph as a readable list:
 
-Implementation: [task specification](https://github.com/HymioSpace/Hymio/blob/main/spec/feature23-tasks-and-delegation.md).
+- waiting for dependencies;
+- running;
+- completed;
+- failed or blocked.
+
+The leader is not asked to integrate until all required nodes finish. A failed node blocks dependent
+nodes rather than allowing them to run on missing input.
+
+<DocFigure
+  variant="phone"
+  src="/screenshots/hymio-material-workflow.png"
+  caption="Dynamic Workflow dependency view: waiting for dependencies, running and completed nodes stay on one compact surface."
+/>
+
+## Cancel, pause and delete
+
+### Cancel
+
+Cancel is terminal:
+
+- the Task and open Run become cancelled;
+- future triggers stop;
+- bound members stop or are cancelled;
+- the card disappears from current tasks;
+- the record does not move into the successful “Completed” group.
+
+The conversation remains available. Cancel affects the task, not the account or chat history.
+
+### Pause
+
+Pause preserves the Run and checkpoint for a later resume. If the task is paused because a budget or
+progress limit was reached, the relevant task explains that condition.
+
+### Remove from view
+
+Removing a cancelled task from the current list is a view concern. It does not imply that the task
+succeeded or that an external side effect was undone.
+
+## Notifications
+
+Two separate concepts are involved:
+
+1. **Delivery policy** controls which channels Hymio may use and under which conditions.
+2. **Agent notify request** is a semantic request to surface an update. It does not override user
+   settings, foreground suppression, deduplication or approval rules.
+
+Task completion and notification delivery are also separate. A result can be complete even when a
+notification is pending or fails.
+
+## Why tasks live in Oath
+
+Hymio does not maintain a second scheduler or task database.
+
+- Oath persists Task, Run, checkpoint, budget and Agent execution.
+- Hymio authenticates the user, projects the Oath result into the product API, and renders it.
+- Pause, resume and cancel are forwarded to Oath.
+- Notifications are delivered through Hymio after Oath requests a result delivery.
+
+This avoids “task state says running, but executor says paused” disagreement.
+
+## API surface
+
+Hymio exposes:
+
+- `GET /tasks`;
+- `POST /tasks` with `get`, `pause`, `resume` or `cancel`.
+
+Task creation and requirement changes remain Agent-managed. The HTTP client cannot fabricate internal
+pending statuses or bypass Oath state validation.
+
+## Design principles
+
+- Show work, not implementation;
+- put exceptions beside the affected task;
+- never label cancellation as completion;
+- never duplicate a page-level alert and the task card;
+- use compact labels and progressive disclosure;
+- keep Agent communication directional;
+- keep raw tools and traces one level deeper;
+- respect loading, empty, error and cancelled states.
+
+See [Multi-agent tasks and collaboration](../oath/delegation) for the execution architecture.

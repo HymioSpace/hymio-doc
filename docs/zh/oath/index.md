@@ -4,7 +4,8 @@ Oath 是个人 Agent 的 Harness（执行框架），也是持续管理执行状
 
 这里的 runtime 指持续管理执行状态与调度的服务端程序，不是浏览器或前端框架里的 runtime。
 
-它适合需要持续执行、异步工具结果或多设备接入的应用。Oath 不提供产品账号和聊天界面，也不保存由应用负责的任务业务状态。
+它适合需要持续执行、异步工具结果或多设备接入的应用。Oath 负责持久 Task/Run 生命周期、执行与多 Agent 协作；
+它不提供应用自己的产品账号、聊天界面和业务授权。
 
 ## 先看整体结构
 
@@ -71,7 +72,7 @@ Oath 是个人 Agent 的 Harness（执行框架），也是持续管理执行状
 | 接入自己的客户端 | [WebSocket 与 HTTP](./protocol) |
 | 增加 Tool、CLI 或 Skill | [扩展能力](./extensions) |
 | 配置 Prompt、模型和鉴权 | [运行时配置](./configuration) |
-| 创建有界子 Agent | [子 Agent 与应用事件](./delegation) |
+| 理解任务与多 Agent 协作 | [多 Agent 任务与协作](./delegation) |
 
 ## 开发顺序
 
