@@ -21,6 +21,20 @@ timeout_seconds = 60
 
 模型选择在接纳前校验，按用户持久化。已准备的步骤在工具续行、重试期间保留模型。客户端不能提交任意 Endpoint 或凭据。
 
+## 历史压缩模型
+
+`agent.compress_model` 可以为历史压缩单独选择一个已配置模型。它必须是默认模型、某个
+`selectable_models` 条目或命名的 `model_providers.<choice>`：
+
+```toml
+[agent]
+compress_model = "deepseek-flash"
+```
+
+Worker 使用该模型构建压缩器，并按它对应的 context window 计算容量。留空时保持原行为，继续使用
+主 Provider 模型。这样可以避免主模型可对话、但压缩模型不可用或余额不足时，让长任务在若干步后
+无法继续压缩。压缩失败仍会保留原始历史并明确报告，不会静默截断任务。
+
 ## 应用指令
 
 ```sh
@@ -82,6 +96,7 @@ Verifier 接收带服务鉴权的 POST `{"credential":"USER_ACCESS_TOKEN"}`，�
 | `agent.skill_index_tokens` | Skill 索引 Prompt 预算 |
 | `agent.context_provider_url` | 可选应用 Context endpoint |
 | `agent.permission_policy_url` | 私有工具授权 endpoint |
+| `agent.compress_model` | 可选，仅用于有界历史压缩的已配置模型 |
 | `services.workers` | 共享 Worker 池大小 |
 | `services.lease_seconds` | 执行归属租约 |
 | `supervisor.invoke_interval_seconds` | 待处理工作观察周期 |

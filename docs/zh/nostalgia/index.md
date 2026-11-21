@@ -4,8 +4,9 @@ Nostalgia 是 Hymio 的个人 Context 服务。它接收来源资料，保留可
 提出持久理解，再由服务自身校验并原子发布为一个版本。Agent 可以读取有界概述、检索卡片，并沿
 依据回到原始记录。
 
-服务已经实现；运营者为用户配置 Nostalgia 连接后，Hymio 会接入它。基础对话不依赖 Nostalgia，
-但个人记忆和 Context 发现的任务机会需要它。
+服务已经实现，并复用用户登录 Hymio 的同一套账号。用户注册或登录时，Hymio 会用稳定的
+`user_id` 自动开通 Nostalgia namespace，不要求第二次账号注册或手动绑定。Nostalgia 暂时不可用时
+基础对话仍可使用；个人记忆和 Context 发现的任务机会会在服务恢复后通过首次记忆操作自动重试。
 
 <ProjectOverviewMap kind="nostalgia" />
 
@@ -57,6 +58,10 @@ Nostalgia 是 Hymio 的个人 Context 服务。它接收来源资料，保留可
 | Dreaming 调度、草稿校验、原子发布与回滚 | Nostalgia |
 | Proposal 模型调用与产品层任务去重 / 比较 | Hymio Backend |
 | Agent 执行、任务状态和工具生命周期 | Oath |
+
+Hymio 是唯一身份来源。它为每个 Hymio 用户创建一条 Nostalgia token，使用与 Backend 数据库相邻的
+密钥加密，并只在服务端保存。Nostalgia token 不进入浏览器、移动客户端、Oath 或模型 context。
+静态 token 映射仍用于兼容既有部署和独立 Nostalgia 调试，但不再是账号注册链路。
 
 ## 重要边界
 

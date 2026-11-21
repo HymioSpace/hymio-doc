@@ -7,13 +7,13 @@ Python 包。
 
 | 环境变量 | 用途 |
 | --- | --- |
-| `NOSTALGIA_TOKENS_JSON` | 至少 16 字符的 Bearer token 到稳定 owner ID 的 JSON 映射 |
+| `NOSTALGIA_TOKENS_JSON` | 可选的静态 JSON 映射，将至少 16 字符的 Bearer token 映射到稳定 owner ID；保留用于迁移和独立调试，自动接入 Hymio 时不需要 |
 | `NOSTALGIA_DATABASE` | SQLite 路径，默认 `data/nostalgia.sqlite3` |
 | `NOSTALGIA_HOST`、`NOSTALGIA_PORT` | 由私有部署选择的监听地址与端口 |
 | `NOSTALGIA_DREAMING_ENABLED` | 启动定时 dream worker |
 | `NOSTALGIA_DREAMING_INTERVAL_SECONDS` | 周期，默认 600，最小 60 |
 | `NOSTALGIA_DREAMING_PROVIDER_URL` | 私有 HTTP(S) proposal endpoint |
-| `NOSTALGIA_DREAMING_PROVIDER_TOKEN_FILE` | 可选 Provider bearer token 文件 |
+| `NOSTALGIA_DREAMING_PROVIDER_TOKEN_FILE` | proposal Provider 与 token 开通控制面共用的私有服务凭据文件 |
 | `NOSTALGIA_DREAMING_BATCH_MAX_RECORDS` | 单次 dream 最大输入记录数 |
 | `NOSTALGIA_DREAMING_BATCH_MAX_CHARS` | 最大序列化输入字符数 |
 | `NOSTALGIA_DREAMING_DRAFT_TIMEOUT_SECONDS` | 草稿被视为卡住并放弃的超时 |
@@ -33,9 +33,19 @@ Python 包。
 
 ## Hymio 绑定
 
-Hymio 使用私有 per-user JSON 文件，每项包含 Nostalgia base URL 与 token 文件引用。相对 token
-路径按 JSON 文件目录解析。Backend 根据已认证 Hymio user 读取绑定并代理请求；客户端与 Oath 都
-不会取得 Nostalgia token。
+Hymio Backend 在密码注册、OIDC session exchange 和 refresh 时调用仅服务端可用的
+`PUT /v1/admin/tokens/{user_id}`。该操作幂等；Hymio 生成稳定的 per-user 凭据并只保存加密形式，
+同时直接把 Hymio `user_id` 作为 Nostalgia namespace。多 Backend worker 会收敛到同一个凭据，
+不会因并发创建不同 token 而互相覆盖。
+
+在 `hymio.toml` 设置私有 `nostalgia_url`，并把 Backend 的 `service_token_file` 以
+`NOSTALGIA_DREAMING_PROVIDER_TOKEN_FILE` 挂载给 Nostalgia；公网入口仍必须拒绝 `/internal/*`。
+Hymio 不会把生成的 Nostalgia token 暴露给客户端、Oath 或模型。
+
+如果开通暂时失败，登录仍然可用并返回 `context_ready=false`。首次记忆操作会自动重试开通，用户
+不需要重新注册。现有 per-user JSON 连接文件是迁移和运营兜底，不再是正常账号流程。
+已有静态绑定第一次被使用时，Hymio 会把原 token 开通到动态摘要表中，并把 URL / token 保存为加密
+绑定。之后可以移除 JSON 文件，而不会让旧账号失效。
 
 没有绑定时返回 “context unavailable”，不能伪装成成功空账号。界面必须把读取失败和确认空账号
 区分开。
@@ -46,7 +56,8 @@ Dreaming provider 指向 Hymio 私有 proposal endpoint，并携带 Backend inte
 ## 备份与恢复
 
 数据库使用 WAL。使用 SQLite online backup API，或停止服务后复制完整数据目录；如果存在 WAL/SHM
-也要一起保留。只复制运行中的主数据库可能丢失已提交数据。
+也要一起保留。只复制运行中的主数据库可能丢失已提交数据。Hymio 的 `hymio.context.key` 必须与
+Backend SQLite 数据库一起备份；缺少该密钥时，加密的 per-user Context 绑定无法恢复。
 
 恢复数据库后再启动替代服务。Token 映射单独保持私有。恢复后至少验证：
 
@@ -56,6 +67,7 @@ Dreaming provider 指向 Hymio 私有 proposal endpoint，并携带 Backend inte
 - 当前 `_index` 与 `_core` 可读；
 - `/v1/events` 能从消费者已保存 checkpoint 继续；
 - 旧草稿不会阻塞下一轮调度。
+- 新注册的 Hymio 账号无需手工创建 token，就能写入并读取第一条 Nostalgia 记录。
 
 ## 健康与管理
 
