@@ -52,6 +52,17 @@ Context 的定义使用 `processing_state=applied|noop|needs_input`；`noop` 与
 带 reason。Context 的内容状态是 `pending|active|obsolete|deleted`；command 使用处理状态而不是
 内容状态。因此“等待用户澄清”可以被审阅并提交，但不能伪装成已执行。
 
+## 账号开通
+
+| 路由 | 用途 |
+| --- | --- |
+| `PUT /v1/admin/tokens/{user_id}` | 仅服务端可用，幂等创建或轮换一个用户凭据 |
+
+这是控制面请求，使用私有服务凭据而不是终端用户 Bearer token。请求正文为
+`{"token":"..."}`。Nostalgia 只保存 SHA-256 摘要，必要时创建 active namespace，并让 token 立即
+生效。对同一用户重新开通会原子替换旧 token；Hymio 持有稳定 `user_id` 并加密保存自己的 token
+副本。
+
 ## Artifact 与检索
 
 | 路由 | 用途 |

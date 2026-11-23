@@ -42,6 +42,11 @@ Oath 现在把持续工作组织成任务系统，而不是一段带了若干临
 | 每周生成竞品简报 | 长期 | Agent Team |
 | 按依赖关系形成多阶段报告 | 临时 | Dynamic Workflow |
 
+选择出的执行方式不是 UI 标签。Oath 会把模式作为硬约束写进绑定 TaskAgent 的 system prompt 和首次
+任务说明：`parallel_subagents` 必须先形成至少两个边界独立的叶子 Agent；`agent_team` 必须实际创建
+Teammate 并使用持久 Team 通信；`dynamic_workflow` 必须先持久化 DAG 再执行节点。如果任务确实无法
+按该模式可靠拆分，TaskAgent 必须报告具体阻塞，不能串行做完却声称已经执行了所选多 Agent 模式。
+
 ## 四种执行方式
 
 ### 1. Program 执行
@@ -239,6 +244,10 @@ TaskAgent 必须为每次委派提供足够的任务专属资料。
 
 事件发生时间在持久层保持 UTC，用于稳定排序。注入模型上下文时，`<time>` 会按客户端最近上报的
 `time_zone` 转成本地时间，并附带 timezone 元数据；这是展示口径，不会另存一套时钟。
+
+周期 Agent 任务的每个 TaskRun 只表示一个 `due_at` occurrence。TaskAgent 会收到这个发生时间，只
+分析该 occurrence 当时已有的证据，并在下一次 occurrence 建立新 Run 前完成本次结果。Previous
+Task memory 是背景历史，不是一批尚未处理的周期结果；多个到期时间不能合并成一次模型回答。
 
 ## 用户可见层级
 

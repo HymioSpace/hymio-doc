@@ -29,6 +29,8 @@
 - 预算及其他异常只在受影响任务内部显示。用户授权后，主 Agent 可以扩大当前 Run 预算并从检查点
   继续，不会取消后重建。
 - 对话以真实可见内容为锚点；发送后收起键盘，展开执行过程时向下增长，不再产生页面级空白。
+- 任务定义使用摘要加有界渲染阅读 sheet，不再原地撑开很长的原始目标；Agent 执行记录保留完整的
+  有界历史，而不是只保留最近 10 条或 20 条。
 - 工具过程优先展示模型提供的 `description`；命令语法和通用传输名称只作为兜底或深入诊断。
 - Trace 以首个输入正文作为可读标题，显示本地墙钟时间、相对耗时以及有界的 LLM 请求 / 响应；
   原始 Trace ID 折叠到详情，不再占据主视觉。
@@ -50,7 +52,8 @@
   restricted-scope 审核。
 - Apple 日历与 Apple 健康需要签名 iOS 构建、真机权限、HealthKit capability，以及用户明确
   同意上传选定摘要。
-- APNs、实时活动、云 Provider、Nostalgia 用户绑定和管理员用户 ID 都需要私有部署配置。
+- APNs、实时活动、云 Provider、Nostalgia 服务地址和管理员用户 ID 需要私有部署配置。用户级
+  Nostalgia 绑定在账号登录时自动完成。
 - Provider 实际配额、云手机可用性和 App Store 隐私要求取决于运营者与上游账号。
 
 ### 尚未交付
@@ -71,6 +74,7 @@
 - 持久 Team 消息、有界且无环的 Workflow DAG、依赖失败传播和 Leader join。
 - 按所有者隔离的委派执行活动、语义化工具描述、工具审批、Trace 与独立 Agent 上下文。
 - 外部应用 Context Provider、模型与窗口选择、媒体工具和私有鉴权接入。
+- 可选 `agent.compress_model` 将历史压缩与主模型分开，并按压缩模型自己的 context capacity 计算。
 
 ### 重要边界
 
@@ -92,7 +96,9 @@
   但不会因此获得执行权限。
 - 权威 ID / 来源 / 过滤索引与不区分大小写的子串搜索；精确读取、快照分页和来源版本冲突处理。
 - record / artifact 有界图查询与检索，支持一跳或两跳扩展、显式截断和快照冲突。
-- Hymio Backend 维护每用户私有连接；Nostalgia token 不进入客户端、Oath 或模型。
+- 从唯一的 Hymio 注册 / 登录流程自动开通每用户 Context；开通在重试和多个 Worker 之间幂等，
+  可以零静态 token 启动，并在服务短暂中断后由首次记忆操作自动补偿。
+- Hymio Backend 加密保存每用户私有连接；Nostalgia token 不进入客户端、Oath 或模型。
 
 ### 不作承诺
 

@@ -116,8 +116,10 @@ The primary detail page keeps:
 6. the leader and bound members;
 7. the user-visible final result.
 
-The task definition is collapsed by default. Technical event payloads and raw tool JSON are not part
-of the consumer task page.
+The task definition is collapsed by default. Expanding it shows a readable summary, completion
+criteria and a single **Read full task definition** action. The full rendered definition opens in a
+medium or large sheet, so a long brief cannot push the task timeline or create a large blank scroll
+range. Technical event payloads and raw tool JSON are not part of the consumer task page.
 
 ## Agent collaboration
 
@@ -151,6 +153,11 @@ Markdown rendering while fenced code remains intact.
 
 Tool calls are collapsed by default. “Run command”, “browser” or raw implementation names are not
 used as the main explanation when the Agent supplied a semantic description.
+
+The task API and both clients keep the complete bounded activity history rather than an arbitrary
+“latest ten” or “latest twenty” suffix. The current hard bound is 200 entries per Agent so a large
+multi-Agent run remains inspectable without producing an unbounded response. Older terminal work is
+not silently hidden while newer records arrive.
 
 Every Oath tool call requires a short `description`. The primary exploration view uses that
 description, with the tool name as secondary context. Raw arguments and result JSON remain in the

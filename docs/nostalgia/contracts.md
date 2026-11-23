@@ -59,6 +59,17 @@ reason. Context status is `pending|active|obsolete|deleted`; commands use the pr
 instead of content status. A publish may therefore say “needs clarification” without pretending the
 request succeeded.
 
+## Account provisioning
+
+| Route | Purpose |
+| --- | --- |
+| `PUT /v1/admin/tokens/{user_id}` | Service-only, idempotent creation or rotation of one user credential. |
+
+This control-plane request uses the private service credential, not an end-user bearer token. The
+body is `{"token":"..."}`. Nostalgia stores only a SHA-256 digest, creates the active namespace if
+needed and makes the token usable immediately. Reproviding a user atomically replaces the previous
+token. Hymio owns the stable `user_id` and encrypts its copy of the token.
+
 ## Artifacts and retrieval
 
 | Route | Purpose |

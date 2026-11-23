@@ -71,8 +71,9 @@ task needs a schedule. A cancelled task leaves the current list and is not count
 
 ## Memory is a service boundary
 
-Nostalgia is implemented and integrated when the user has a private binding. Hymio's Memory surface
-shows:
+Nostalgia is implemented and provisioned from the same Hymio registration/login flow. Hymio creates
+the private service binding automatically, so users never create a second memory account. Hymio's
+Memory surface shows:
 
 - **Footprints** — original records and their actual source;
 - **Remembered understanding** — published cards with evidence;

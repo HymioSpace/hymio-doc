@@ -11,7 +11,8 @@ scheduler.
 flowchart LR
   Sources[Conversation, notes, Gmail, Dida, Calendar, Health] --> Hymio[Hymio Backend]
   Hymio -->|Idempotent records| N[Nostalgia API]
-  N --> Store[(SQLite: records, versions, details, events)]
+  Hymio -->|Provision encrypted per-user token| N
+  N --> Store[(SQLite: records, versions, details, events, token hashes)]
   Scheduler[Dream scheduler] --> Provider[Hymio proposal adapter]
   Provider --> Model[Configured model]
   Model -->|Validated JSON proposal| Scheduler
@@ -22,8 +23,9 @@ flowchart LR
 ```
 
 The model-facing `remember` and `recall` commands live in Hymio. They call Hymio's authenticated
-context proxy; the proxy resolves the owner's private Nostalgia endpoint and bearer token. Those
-credentials never enter a prompt, a client or Oath.
+context proxy; the proxy resolves the owner's dynamically provisioned Nostalgia endpoint and bearer
+token. Hymio stores the token encrypted; Nostalgia stores only its digest. Those credentials never
+enter a prompt, a client or Oath.
 
 ## Request and service layers
 
@@ -32,7 +34,7 @@ credentials never enter a prompt, a client or Oath.
 | `api/` | FastAPI routes, bearer identity, body limits, JSON errors, service lifecycle and scheduler startup |
 | `core/` | Record rules, draft/commit state machine, assembly, cursors, search and bounded graph reads |
 | `protocol/` | Strict request/response models, IDs, source metadata, artifacts and relations |
-| `storage/` | SQLite transactions, idempotency receipts, signed cursors and append-only context events |
+| `storage/` | SQLite transactions, token digests, idempotency receipts, signed cursors and append-only context events |
 | `dreaming.py` | Periodic bounded input selection, provider call, proposal application and failure events |
 
 The service opens short transactions for both reads and writes. A model/provider call happens

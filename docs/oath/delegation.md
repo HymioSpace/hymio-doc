@@ -50,6 +50,14 @@ All combinations are valid:
 | Weekly competitive briefing | ongoing | Agent Team |
 | Build a report with dependent research stages | temporary | Dynamic Workflow |
 
+The selected execution mode is not a display label. Oath injects the selected mode into the bound
+TaskAgent's system prompt and first assignment as a hard execution contract. A
+`parallel_subagents` TaskAgent must create at least two independently bounded leaf Agents before
+broad work; `agent_team` requires actual teammates and durable team communication; and
+`dynamic_workflow` requires a persisted DAG before node execution. If the Task cannot honestly be
+split that way, the TaskAgent reports a concrete blocker instead of claiming that the selected mode
+was followed while executing serially.
+
 ## Four execution modes
 
 ### 1. Program execution
@@ -266,6 +274,11 @@ material for each assignment.
 Occurrence timestamps remain UTC for durable ordering. When events are injected into model context,
 the event `<time>` is converted to the latest client-supplied `time_zone` and the timezone is included
 as context metadata. This is presentation context, not a second stored clock.
+
+For recurring Agent work, each TaskRun is scoped to one `due_at` occurrence. Its TaskAgent receives
+that occurrence time, analyzes evidence for that occurrence, and completes it before a later
+occurrence creates a new Run. Previous Task memory is background history, not a batch of pending
+results; multiple due times must not be merged into one model response.
 
 ## User-visible layers
 
